@@ -6,6 +6,10 @@
   let currentSlide = $state(0);
   let intervalId;
 
+  let currentSlideNumber = $derived(String(currentSlide + 1).padStart(2, "0"));
+
+  let totalSlidesNumber = $derived(String(data.images.length).padStart(2, "0"));
+
   function nextSlide() {
     currentSlide =
       currentSlide === data.images.length - 1 ? 0 : currentSlide + 1;
@@ -33,9 +37,9 @@
 
 <main class="home-page">
   <div class="side-text side-text-left">
-    <span>02</span>
+    <span>{currentSlideNumber}</span>
     <span class="line"></span>
-    <span>06</span>
+    <span>{totalSlidesNumber}</span>
   </div>
 
   <div class="side-text side-text-right">
@@ -123,12 +127,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-
-  .image-frame {
-    width: 100%;
-    aspect-ratio: 16 / 8.8;
-    overflow: hidden;
   }
 
   .image-frame {
@@ -246,7 +244,7 @@
   .side-text-right {
     right: 68px;
     top: 50%;
-    transform: translateY(-50%);
+    transform: translateY(-50%) rotate(180deg);
   }
 
   @media (max-width: 900px) {
