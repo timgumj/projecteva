@@ -1,6 +1,8 @@
 <script>
   let { children } = $props();
 
+  let menuOpen = $state(false);
+
   const menuItems = [
     {
       label: "About",
@@ -19,14 +21,34 @@
       href: "/events",
     },
   ];
+
+  function toggleMenu() {
+    menuOpen = !menuOpen;
+  }
+
+  function closeMenu() {
+    menuOpen = false;
+  }
 </script>
 
 <header class="site-header">
-  <a href="/" class="logo">Eva Eichinger</a>
+  <a href="/" class="logo" onclick={closeMenu}>Eva Eichinger</a>
 
-  <nav class="main-nav" aria-label="Main navigation">
+  <button
+    class="menu-toggle"
+    type="button"
+    aria-label={menuOpen ? "Close menu" : "Open menu"}
+    aria-expanded={menuOpen}
+    onclick={toggleMenu}
+  >
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <nav class:open={menuOpen} class="main-nav" aria-label="Main navigation">
     {#each menuItems as item}
-      <a href={item.href}>{item.label}</a>
+      <a href={item.href} onclick={closeMenu}>{item.label}</a>
     {/each}
   </nav>
 </header>
@@ -69,6 +91,7 @@
     line-height: 1;
     letter-spacing: 0.055em;
     transition: opacity 0.25s ease;
+    z-index: 102;
   }
 
   .logo::after {
@@ -124,6 +147,10 @@
     width: 100%;
   }
 
+  .menu-toggle {
+    display: none;
+  }
+
   .site-footer {
     position: fixed;
     left: 0;
@@ -146,25 +173,77 @@
     margin: 0;
   }
 
-  @media (max-width: 700px) {
+  @media (max-width: 900px) {
     .site-header {
       padding: 22px 24px 18px;
-      flex-direction: column;
-      gap: 20px;
-      align-items: flex-start;
+      align-items: center;
     }
 
     .logo {
       font-size: 1.45rem;
     }
 
+    .menu-toggle {
+      position: relative;
+      z-index: 102;
+      display: flex;
+      width: 34px;
+      height: 26px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .menu-toggle span {
+      display: block;
+      width: 100%;
+      height: 1px;
+      background: #2f2d2b;
+      transition:
+        transform 0.25s ease,
+        opacity 0.25s ease;
+    }
+
+    .menu-toggle[aria-expanded="true"] span:nth-child(1) {
+      transform: translateY(12.5px) rotate(45deg);
+    }
+
+    .menu-toggle[aria-expanded="true"] span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .menu-toggle[aria-expanded="true"] span:nth-child(3) {
+      transform: translateY(-12.5px) rotate(-45deg);
+    }
+
     .main-nav {
-      flex-wrap: wrap;
-      gap: 18px 24px;
+      position: fixed;
+      top: 0;
+      right: 0;
+      z-index: 101;
+      width: 100%;
+      height: 100vh;
+      padding: 120px 24px 40px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      gap: 28px;
+      background: #ffffff;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .main-nav.open {
+      transform: translateX(0);
     }
 
     .main-nav a {
-      font-size: 0.95rem;
+      font-size: 1.25rem;
     }
 
     .site-footer {
