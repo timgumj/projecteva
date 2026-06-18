@@ -1,89 +1,171 @@
 <script>
-  import { onMount } from "svelte";
-
   let { data } = $props();
 
-  let currentSlide = $state(0);
-  let intervalId;
+  let selectedWorkId = $state(null);
 
-  let currentSlideNumber = $derived(String(currentSlide + 1).padStart(2, "0"));
+  let worksByYear = $derived(
+    data.works?.reduce((groups, work) => {
+      const year = work.year || "Works";
 
-  let totalSlidesNumber = $derived(String(data.images.length).padStart(2, "0"));
+      if (!groups[year]) {
+        groups[year] = [];
+      }
 
-  function nextSlide() {
-    currentSlide =
-      currentSlide === data.images.length - 1 ? 0 : currentSlide + 1;
+      groups[year].push(work);
+
+      return groups;
+    }, {}) || {},
+  );
+
+  let sortedWorksByYear = $derived(
+    Object.entries(worksByYear).sort(([yearA], [yearB]) => {
+      const numberA = Number(yearA);
+      const numberB = Number(yearB);
+
+      if (!Number.isNaN(numberA) && !Number.isNaN(numberB)) {
+        return numberB - numberA;
+      }
+
+      return yearB.localeCompare(yearA);
+    }),
+  );
+
+  let selectedWork = $derived(
+    data.works?.find((work) => work.id === selectedWorkId) ||
+      sortedWorksByYear?.[0]?.[1]?.[0],
+  );
+
+  function selectWork(work) {
+    selectedWorkId = work.id;
   }
-
-  function previousSlide() {
-    currentSlide =
-      currentSlide === 0 ? data.images.length - 1 : currentSlide - 1;
-  }
-
-  function goToSlide(index) {
-    currentSlide = index;
-  }
-
-  onMount(() => {
-    intervalId = setInterval(() => {
-      nextSlide();
-    }, 10000);
-
-    return () => {
-      clearInterval(intervalId);
-    };
-  });
 </script>
 
-<main class="home-page">
-  <section class="hero-slider">
-    {#if data.images.length > 0}
-      <div class="slider-stage">
-        <button
-          class="slider-arrow slider-arrow-left"
-          onclick={previousSlide}
-          aria-label="Previous slide"
-        >
-          ←
-        </button>
+<svelte:head>
+  <title>Project Eva | Contemporary Artist Portfolio</title>
 
-        <div class="image-frame">
-          <img
-            src={data.images[currentSlide].src}
-            alt={data.images[currentSlide].alt}
-          />
+  <meta
+    name="description"
+    content="Project Eva is a minimalist contemporary artist portfolio featuring selected works, exhibitions, and visual projects."
+  />
+
+  <meta name="robots" content="index, follow" />
+
+  <meta
+    property="og:title"
+    content="Project Eva | Contemporary Artist Portfolio"
+  />
+
+  <meta
+    property="og:description"
+    content="Explore selected works and exhibitions from Project Eva."
+  />
+
+  <meta property="og:type" content="website" />
+
+  {#if selectedWork?.featuredImage}
+    <meta property="og:image" content={selectedWork.featuredImage} />
+  {/if}
+</svelte:head>
+
+<main class="home-page">
+  <section class="homepage-intro" aria-label="Homepage introduction">
+    <p>Selected Works</p>
+    <h1>Project Eva</h1>
+  </section>
+
+  {#if data.works && data.works.length > 0}
+    <section class="works-feature" aria-label="Selected works">
+      <aside class="works-list-column" aria-label="Works list">
+        <div class="works-heading">
+          <h2 class="works-label">SELECTED WORKS</h2>
         </div>
 
-        <button
-          class="slider-arrow slider-arrow-right"
-          onclick={nextSlide}
-          aria-label="Next slide"
-        >
-          →
-        </button>
-      </div>
+        <div class="works-scroll-area">
+          <p class="mobile-helper">Tap title to preview, View to open</p>
 
-      <div class="slider-number-bottom">
-        <span>{currentSlideNumber}</span>
-        <span class="line"></span>
-        <span>{totalSlidesNumber}</span>
-      </div>
+          {#each sortedWorksByYear as [year, works]}
+            <section
+              class="works-year-group"
+              aria-labelledby={`works-year-${year}`}
+            >
+              <h3 class="works-year" id={`works-year-${year}`}>{year}</h3>
 
-      <div class="slider-bottom">
-        <div class="progress-dashes">
-          {#each data.images as image, index}
-            <button
-              class:active={index === currentSlide}
-              onclick={() => goToSlide(index)}
-              aria-label={`Go to slide ${index + 1}`}
-            ></button>
+              <div class="works-links">
+                {#each works as work}
+                  <div class="work-item">
+                    <a
+                      href={work.frontendLink}
+                      class="desktop-work-link"
+                      class:active={selectedWork?.id === work.id}
+                      onmouseenter={() => selectWork(work)}
+                      onfocus={() => selectWork(work)}
+                      aria-label={`Open ${work.title}`}
+                    >
+                      {#if work.featuredImage}
+                        <img
+                          src={work.featuredImage}
+                          alt=""
+                          class="desktop-thumbnail"
+                          loading="lazy"
+                        />
+                      {/if}
+
+                      <h4>{work.title}</h4>
+                    </a>
+
+                    <div class="touch-work-row">
+                      <button
+                        type="button"
+                        class="touch-preview-button"
+                        class:active={selectedWork?.id === work.id}
+                        onclick={() => selectWork(work)}
+                        aria-label={`Preview ${work.title}`}
+                      >
+                        {#if work.featuredImage}
+                          <img
+                            src={work.featuredImage}
+                            alt=""
+                            class="work-thumbnail"
+                            loading="lazy"
+                          />
+                        {/if}
+
+                        <h4>{work.title}</h4>
+                      </button>
+
+                      <a
+                        href={work.frontendLink}
+                        class="touch-view-link"
+                        aria-label={`Open ${work.title}`}
+                      >
+                        View
+                      </a>
+                    </div>
+                  </div>
+                {/each}
+              </div>
+            </section>
           {/each}
         </div>
+      </aside>
 
-        <a href="/exhibitions/2026" class="discover-link"> View Works </a>
+      <div class="works-image-column">
+        <div class="image-frame">
+          {#if selectedWork?.featuredImage}
+            {#key selectedWork.id}
+              <img
+                src={selectedWork.featuredImage}
+                alt={selectedWork.title}
+                class="featured-image"
+              />
+            {/key}
+          {/if}
+        </div>
       </div>
-    {/if}
-  </section>
+    </section>
+  {:else}
+    <p class="empty-message">No works found.</p>
+  {/if}
 </main>
 
 <style>
@@ -92,194 +174,505 @@
     overflow-x: hidden;
     font-family: Georgia, "Times New Roman", serif;
     background: #ffffff;
-    color: #6f6b68;
+    color: #4d4a47;
   }
 
   .home-page {
     width: 100%;
     min-height: 100vh;
+    padding: 116px 40px 92px;
+    box-sizing: border-box;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .homepage-intro {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .homepage-intro p,
+  .homepage-intro h1 {
+    margin: 0;
+  }
+
+  .works-feature {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: clamp(38px, 5vw, 88px);
+    align-items: center;
+  }
+
+  .works-list-column {
+    width: 100%;
+    max-width: 320px;
+    height: min(76vh, 820px);
+    justify-self: start;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    padding-top: 100px;
-    padding-bottom: 100px;
-    box-sizing: border-box;
-    overflow: hidden;
-    background: #ffffff;
   }
 
-  .hero-slider {
-    width: min(76vw, 1200px);
-    margin: auto;
+  .works-heading {
+    margin-bottom: 42px;
   }
 
-  .slider-stage {
+  .works-label {
+    margin: 0;
+    color: #3f3c39;
+    font-size: 15px;
+    font-weight: 300;
+    line-height: 1.15;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .works-scroll-area {
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 4px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .works-scroll-area::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-helper {
+    display: none;
+  }
+
+  .works-year-group {
+    padding: 0;
+    margin-bottom: 32px;
+    border-bottom: 0;
+  }
+
+  .works-year-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .works-year {
+    margin: 0 0 15px;
+    color: #aaa39d;
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .works-links {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .work-item {
+    width: 100%;
+  }
+
+  .desktop-work-link {
+    width: fit-content;
+    max-width: 100%;
+    display: inline-flex;
+    color: #77716d;
+    text-decoration: none;
+    transition:
+      color 0.35s ease,
+      opacity 0.35s ease;
+  }
+
+  .desktop-work-link {
+    width: fit-content;
+    max-width: 100%;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: #77716d;
+    text-decoration: none;
+    transition:
+      color 0.35s ease,
+      opacity 0.35s ease;
+  }
+
+  .desktop-thumbnail {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    display: block;
+    object-fit: cover;
+    object-position: center;
+    opacity: 0.7;
+    filter: none;
+    transition:
+      opacity 0.35s ease,
+      transform 0.35s ease;
+  }
+
+  .desktop-work-link:hover .desktop-thumbnail,
+  .desktop-work-link:focus .desktop-thumbnail,
+  .desktop-work-link.active .desktop-thumbnail {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+
+  .desktop-work-link h4,
+  .touch-preview-button h4 {
+    display: inline-block;
     position: relative;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.35;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .desktop-work-link h4::after,
+  .touch-preview-button h4::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -4px;
+    width: 0;
+    height: 1px;
+    background: currentColor;
+    transition: width 0.5s ease;
+  }
+
+  .desktop-work-link:hover,
+  .desktop-work-link:focus,
+  .desktop-work-link.active {
+    color: #1f1f1f;
+  }
+
+  .desktop-work-link:hover h4::after,
+  .desktop-work-link:focus h4::after,
+  .desktop-work-link.active h4::after {
+    width: 100%;
+  }
+
+  .touch-work-row {
+    display: none;
+  }
+
+  .works-image-column {
+    width: 100%;
+    min-width: 0;
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
   .image-frame {
-    width: min(60vw, 760px);
-    height: min(70vh, 760px);
+    width: 100%;
+    height: min(76vh, 820px);
     overflow: hidden;
-    margin: 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
+    background: #f8f6f4;
   }
 
-  .image-frame img {
+  .featured-image {
     width: 100%;
     height: 100%;
     display: block;
-    object-fit: contain;
+    object-fit: cover;
     object-position: center;
+    animation: imageReveal 0.85s ease both;
   }
 
-  .slider-arrow {
-    position: absolute;
-    top: 50%;
-    z-index: 5;
-    transform: translateY(-50%);
-    border: 0;
-    background: transparent;
+  .empty-message {
+    margin: 0;
     color: #6f6b68;
-    font-family: inherit;
-    font-size: 34px;
-    line-height: 1;
-    cursor: pointer;
-    padding: 12px;
+    font-size: 14px;
   }
 
-  .slider-arrow-left {
-    left: -72px;
-  }
+  @keyframes imageReveal {
+    from {
+      opacity: 0;
+      transform: scale(1.015);
+      filter: blur(4px);
+    }
 
-  .slider-arrow-right {
-    right: -72px;
+    to {
+      opacity: 1;
+      transform: scale(1);
+      filter: blur(0);
+    }
   }
-
-  .slider-number-bottom {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 18px;
-    color: #b8b1ac;
-    font-size: 28px;
-    font-style: italic;
-    margin-top: 22px;
-  }
-
-  .slider-number-bottom .line {
-    width: 42px;
-    height: 1px;
-    background: #b8b1ac;
-  }
-
-  .slider-bottom {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    margin-top: 28px;
-  }
-
-  .progress-dashes {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    transform: translateX(95px);
-  }
-
-  .progress-dashes button {
-    width: 46px;
-    height: 2px;
-    border: 0;
-    background: #d7d1cc;
-    padding: 0;
-    cursor: pointer;
-  }
-
-  .progress-dashes button.active {
-    background: #6f6b68;
-  }
-
-  .discover-link {
-    color: #6f6b68;
-    text-decoration: underline;
-    text-underline-offset: 6px;
-    font-size: clamp(20px, 2vw, 28px);
-    font-style: normal;
-    font-weight: 400;
-    line-height: 1;
-    white-space: nowrap;
-    justify-self: end;
-  }
-
-  .discover-link:hover {
-    opacity: 0.7;
-  }
-
   @media (max-width: 900px) {
-    .hero-slider {
-      width: 78vw;
+    .home-page {
+      padding: 120px 40px 92px;
     }
 
-    .slider-arrow-left {
-      left: -48px;
+    .works-feature {
+      grid-template-columns: 300px minmax(0, 1fr);
+      gap: 34px;
     }
 
-    .slider-arrow-right {
-      right: -48px;
-    }
-
-    .slider-bottom {
-      grid-template-columns: 1fr;
-      gap: 24px;
-      text-align: center;
-    }
-
-    .progress-dashes {
-      transform: none;
-    }
-
-    .discover-link {
-      justify-content: center;
-    }
-  }
-
-  @media (max-width: 600px) {
-    .hero-slider {
-      top: 50%;
-      width: 76vw;
+    .works-list-column {
+      max-width: 300px;
+      height: min(68vh, 720px);
     }
 
     .image-frame {
-      width: 82vw;
-      height: 62vh;
+      height: min(68vh, 720px);
     }
 
-    .slider-arrow {
-      font-size: 28px;
-      padding: 8px;
+    .desktop-work-link {
+      display: none;
     }
 
-    .slider-arrow-left {
-      left: -38px;
+    .touch-work-row {
+      display: grid;
+      grid-template-columns: 46px minmax(0, 1fr);
+      grid-template-rows: auto auto;
+      column-gap: 14px;
+      row-gap: 4px;
+      align-items: start;
     }
 
-    .slider-arrow-right {
-      right: -38px;
+    .touch-preview-button {
+      display: contents;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: #77716d;
+      font-family: inherit;
+      text-align: left;
+      cursor: pointer;
     }
 
-    .progress-dashes button {
-      width: 34px;
+    .work-thumbnail {
+      grid-column: 1;
+      grid-row: 1 / 3;
+      width: 46px;
+      height: 46px;
+      display: block;
+      object-fit: cover;
+      object-position: center;
+      opacity: 0.7;
+      filter: none;
+      transition:
+        opacity 0.35s ease,
+        transform 0.35s ease;
     }
 
-    .discover-link {
-      font-size: 22px;
+    .touch-preview-button h4 {
+      grid-column: 2;
+      grid-row: 1;
+      margin: 0;
+      padding: 0;
+      color: #77716d;
+      cursor: pointer;
+      transition: color 0.35s ease;
+    }
+
+    .touch-preview-button:hover h4,
+    .touch-preview-button:focus h4,
+    .touch-preview-button.active h4 {
+      color: #1f1f1f;
+    }
+
+    .touch-preview-button:hover .work-thumbnail,
+    .touch-preview-button:focus .work-thumbnail,
+    .touch-preview-button.active .work-thumbnail {
+      opacity: 1;
+      transform: scale(1.04);
+    }
+
+    .touch-preview-button:hover h4::after,
+    .touch-preview-button:focus h4::after,
+    .touch-preview-button.active h4::after {
+      width: 100%;
+    }
+
+    .touch-view-link {
+      grid-column: 2;
+      grid-row: 2;
+      width: fit-content;
+      margin: 0;
+      color: #aaa39d;
+      font-size: 9px;
+      font-weight: 400;
+      line-height: 1;
+      letter-spacing: 0.12em;
+      text-decoration: none;
+      text-transform: uppercase;
+      white-space: nowrap;
+      transition: color 0.3s ease;
+    }
+
+    .touch-view-link::after {
+      content: "";
+      display: block;
+      width: 100%;
+      height: 1px;
+      margin-top: 3px;
+      background: currentColor;
+      opacity: 0.45;
+    }
+
+    .touch-view-link:hover,
+    .touch-view-link:focus {
+      color: #1f1f1f;
+    }
+  }
+
+  @media (max-width: 700px) {
+    :global(body) {
+      overflow: hidden;
+    }
+
+    .home-page {
+      height: 100dvh;
+      min-height: 100dvh;
+      padding: 118px 24px 0;
+      align-items: stretch;
+      overflow: hidden;
+    }
+
+    .works-feature {
+      width: 100%;
+      height: calc(100dvh - 118px);
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: 42dvh minmax(0, 1fr);
+      gap: 22px;
+      align-items: stretch;
+      overflow: hidden;
+    }
+
+    .works-image-column {
+      order: 1;
+      display: flex;
+      min-height: 0;
+      align-items: stretch;
+    }
+
+    .image-frame {
+      width: 100%;
+      height: 100%;
+      max-height: none;
+    }
+
+    .featured-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+
+    .works-list-column {
+      order: 2;
+      max-width: none;
+      height: auto;
+      min-height: 0;
+      overflow: hidden;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .works-heading {
+      flex-shrink: 0;
+      margin-bottom: 18px;
+    }
+
+    .works-label {
+      font-size: 18px;
+    }
+
+    .works-scroll-area {
+      min-height: 0;
+      overflow-y: auto;
+      padding-right: 0;
+      padding-bottom: 60px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .works-scroll-area::-webkit-scrollbar {
+      display: none;
+    }
+
+    .mobile-helper {
+      display: block;
+      margin: 0 0 24px;
+      color: #aaa39d;
+      font-size: 10px;
+      line-height: 1;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .works-year-group {
+      margin-bottom: 34px;
+    }
+
+    .works-year-group:last-child {
+      margin-bottom: 30px;
+    }
+
+    .works-year {
+      margin-bottom: 14px;
+      font-size: 10px;
+    }
+
+    .works-links {
+      gap: 18px;
+    }
+
+    .touch-work-row {
+      grid-template-columns: 52px minmax(0, 1fr);
+      grid-template-rows: auto auto;
+      column-gap: 14px;
+      row-gap: 4px;
+      align-items: start;
+    }
+
+    .work-thumbnail {
+      grid-column: 1;
+      grid-row: 1 / 3;
+      width: 52px;
+      height: 52px;
+      opacity: 0.7;
+      filter: none;
+    }
+
+    .touch-preview-button.active .work-thumbnail {
+      opacity: 1;
+      transform: scale(1.04);
+    }
+
+    .touch-preview-button h4 {
+      grid-column: 2;
+      grid-row: 1;
+      margin: 0;
+      padding: 0;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .touch-preview-button h4::after {
+      display: none;
+    }
+
+    .touch-view-link {
+      grid-column: 2;
+      grid-row: 2;
+      margin: 0;
     }
   }
 </style>
