@@ -7,6 +7,7 @@
   let intervalId;
 
   let currentSlideNumber = $derived(String(currentSlide + 1).padStart(2, "0"));
+
   let totalSlidesNumber = $derived(String(data.images.length).padStart(2, "0"));
 
   function nextSlide() {
@@ -35,6 +36,18 @@
 </script>
 
 <main class="home-page">
+  <div class="side-text side-text-left">
+    <span>{currentSlideNumber}</span>
+    <span class="line"></span>
+    <span>{totalSlidesNumber}</span>
+  </div>
+
+  <div class="side-text side-text-right">
+    <span>Selected</span>
+    <span class="line"></span>
+    <span>Works</span>
+  </div>
+
   <section class="hero-slider">
     {#if data.images.length > 0}
       <div class="slider-stage">
@@ -62,12 +75,6 @@
         </button>
       </div>
 
-      <div class="slide-counter">
-        <span>{currentSlideNumber}</span>
-        <span class="counter-line"></span>
-        <span>{totalSlidesNumber}</span>
-      </div>
-
       <div class="slider-bottom">
         <div class="progress-dashes">
           {#each data.images as image, index}
@@ -79,7 +86,10 @@
           {/each}
         </div>
 
-        <a href="/exhibitions/2026" class="view-works-link"> View works </a>
+        <a href="/exhibitions/2026" class="discover-link">
+          Discover
+          <span></span>
+        </a>
       </div>
     {/if}
   </section>
@@ -160,29 +170,11 @@
     right: -72px;
   }
 
-  .slide-counter {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 14px;
-    color: #9d9691;
-    font-size: 13px;
-    font-style: normal;
-    letter-spacing: 0.08em;
-  }
-
-  .counter-line {
-    width: 28px;
-    height: 1px;
-    background: #c8c0ba;
-  }
-
   .slider-bottom {
     display: grid;
     grid-template-columns: 1fr auto;
     align-items: center;
-    margin-top: 26px;
+    margin-top: 28px;
   }
 
   .progress-dashes {
@@ -206,19 +198,53 @@
     background: #6f6b68;
   }
 
-  .view-works-link {
+  .discover-link {
+    display: flex;
+    align-items: center;
+    gap: 28px;
     color: #6f6b68;
-    font-size: 18px;
-    font-style: normal;
-    line-height: 1.2;
-    text-decoration: underline;
-    text-underline-offset: 5px;
-    text-decoration-thickness: 1px;
+    text-decoration: none;
+    font-size: clamp(36px, 4vw, 54px);
+    font-style: italic;
+    line-height: 1;
     white-space: nowrap;
   }
 
-  .view-works-link:hover {
-    color: #4f4a46;
+  .discover-link span {
+    display: block;
+    width: 70px;
+    height: 1px;
+    background: #6f6b68;
+  }
+
+  .side-text {
+    position: fixed;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    color: #b8b1ac;
+    font-size: 28px;
+    font-style: italic;
+    writing-mode: vertical-rl;
+  }
+
+  .side-text .line {
+    width: 1px;
+    height: 42px;
+    background: #b8b1ac;
+  }
+
+  .side-text-left {
+    left: 68px;
+    top: 50%;
+    transform: translateY(-50%) rotate(180deg);
+  }
+
+  .side-text-right {
+    right: 68px;
+    top: 50%;
+    transform: translateY(-50%) rotate(180deg);
   }
 
   @media (max-width: 900px) {
@@ -244,13 +270,18 @@
       transform: none;
     }
 
-    .view-works-link {
-      justify-self: center;
+    .discover-link {
+      justify-content: center;
+    }
+
+    .side-text {
+      display: none;
     }
   }
 
   @media (max-width: 600px) {
     .hero-slider {
+      top: 50%;
       width: 76vw;
     }
 
@@ -272,21 +303,16 @@
       right: -38px;
     }
 
-    .slide-counter {
-      font-size: 12px;
-      margin-top: 12px;
-    }
-
-    .counter-line {
-      width: 22px;
-    }
-
     .progress-dashes button {
       width: 34px;
     }
 
-    .view-works-link {
-      font-size: 16px;
+    .discover-link {
+      font-size: 36px;
+    }
+
+    .discover-link span {
+      width: 50px;
     }
   }
 </style>
