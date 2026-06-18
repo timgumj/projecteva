@@ -36,18 +36,6 @@
 </script>
 
 <main class="home-page">
-  <div class="side-text side-text-left">
-    <span>{currentSlideNumber}</span>
-    <span class="line"></span>
-    <span>{totalSlidesNumber}</span>
-  </div>
-
-  <div class="side-text side-text-right">
-    <span>Selected</span>
-    <span class="line"></span>
-    <span>Works</span>
-  </div>
-
   <section class="hero-slider">
     {#if data.images.length > 0}
       <div class="slider-stage">
@@ -75,6 +63,12 @@
         </button>
       </div>
 
+      <div class="slider-number-bottom">
+        <span>{currentSlideNumber}</span>
+        <span class="line"></span>
+        <span>{totalSlidesNumber}</span>
+      </div>
+
       <div class="slider-bottom">
         <div class="progress-dashes">
           {#each data.images as image, index}
@@ -87,7 +81,7 @@
         </div>
 
         <a href="/exhibitions/2026" class="discover-link">
-          Discover
+          View Works
           <span></span>
         </a>
       </div>
@@ -170,6 +164,23 @@
     right: -72px;
   }
 
+  .slider-number-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    color: #b8b1ac;
+    font-size: 28px;
+    font-style: italic;
+    margin-top: 22px;
+  }
+
+  .slider-number-bottom .line {
+    width: 42px;
+    height: 1px;
+    background: #b8b1ac;
+  }
+
   .slider-bottom {
     display: grid;
     grid-template-columns: 1fr auto;
@@ -217,36 +228,6 @@
     background: #6f6b68;
   }
 
-  .side-text {
-    position: fixed;
-    z-index: 20;
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    color: #b8b1ac;
-    font-size: 28px;
-    font-style: italic;
-    writing-mode: vertical-rl;
-  }
-
-  .side-text .line {
-    width: 1px;
-    height: 42px;
-    background: #b8b1ac;
-  }
-
-  .side-text-left {
-    left: 68px;
-    top: 50%;
-    transform: translateY(-50%) rotate(180deg);
-  }
-
-  .side-text-right {
-    right: 68px;
-    top: 50%;
-    transform: translateY(-50%) rotate(180deg);
-  }
-
   @media (max-width: 900px) {
     .hero-slider {
       width: 78vw;
@@ -272,10 +253,6 @@
 
     .discover-link {
       justify-content: center;
-    }
-
-    .side-text {
-      display: none;
     }
   }
 
