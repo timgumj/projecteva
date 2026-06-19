@@ -9,16 +9,16 @@
       href: "/about",
     },
     {
+      label: "Paintings",
+      href: "/painting",
+    },
+    {
       label: "Exhibitions",
       href: "/exhibitions",
     },
     {
-      label: "Performance",
-      href: "/performance",
-    },
-    {
       label: "Events",
-      href: "/events",
+      href: "/event",
     },
   ];
 

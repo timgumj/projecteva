@@ -3,36 +3,41 @@
 
   let selectedWorkId = $state(null);
 
-  let worksByYear = $derived(
+  let worksByGroup = $derived(
     data.works?.reduce((groups, work) => {
-      const year = work.year || "Works";
+      const group = work.group || "Works";
 
-      if (!groups[year]) {
-        groups[year] = [];
+      if (!groups[group]) {
+        groups[group] = [];
       }
 
-      groups[year].push(work);
+      if (groups[group].length < 4) {
+        groups[group].push(work);
+      }
 
       return groups;
     }, {}) || {},
   );
 
-  let sortedWorksByYear = $derived(
-    Object.entries(worksByYear).sort(([yearA], [yearB]) => {
-      const numberA = Number(yearA);
-      const numberB = Number(yearB);
+  let sortedWorksByGroup = $derived(
+    Object.entries(worksByGroup).sort(([groupA], [groupB]) => {
+      if (groupA === "Exhibitions") return 1;
+      if (groupB === "Exhibitions") return -1;
+
+      const numberA = Number(groupA);
+      const numberB = Number(groupB);
 
       if (!Number.isNaN(numberA) && !Number.isNaN(numberB)) {
         return numberB - numberA;
       }
 
-      return yearB.localeCompare(yearA);
+      return groupA.localeCompare(groupB);
     }),
   );
 
   let selectedWork = $derived(
     data.works?.find((work) => work.id === selectedWorkId) ||
-      sortedWorksByYear?.[0]?.[1]?.[0],
+      sortedWorksByGroup?.[0]?.[1]?.[0],
   );
 
   function selectWork(work) {
@@ -83,7 +88,7 @@
         <div class="works-scroll-area">
           <p class="mobile-helper">Tap title to preview, View to open</p>
 
-          {#each sortedWorksByYear as [year, works]}
+          {#each sortedWorksByGroup as [year, works]}
             <section
               class="works-year-group"
               aria-labelledby={`works-year-${year}`}

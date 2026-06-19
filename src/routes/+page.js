@@ -30,12 +30,16 @@ function getYearCategory(post, categoriesMap) {
 
     if (!category) continue;
 
-    if (category.parent && categoriesMap[category.parent]) {
-      return categoriesMap[category.parent];
-    }
-
     if (/^\d{4}$/.test(category.slug)) {
       return category;
+    }
+
+    if (category.parent && categoriesMap[category.parent]) {
+      const parentCategory = categoriesMap[category.parent];
+
+      if (/^\d{4}$/.test(parentCategory.slug)) {
+        return parentCategory;
+      }
     }
   }
 
@@ -60,19 +64,39 @@ export async function load({ fetch }) {
     categoriesMap[category.id] = category;
   });
 
+  const exhibitionsCategory = categories.find(
+    (category) => category.slug === 'exhibitions'
+  );
+
   const works = posts.map((post) => {
+    const postCategoryIds = post.categories || [];
+
+    const isExhibitionPost = exhibitionsCategory
+      ? postCategoryIds.includes(exhibitionsCategory.id)
+      : false;
+
     const yearCategory = getYearCategory(post, categoriesMap);
 
-    const year = yearCategory ? decodeHtml(yearCategory.name) : 'Works';
+    const group = isExhibitionPost
+      ? 'Exhibitions'
+      : yearCategory
+        ? decodeHtml(yearCategory.name)
+        : 'Works';
+
     const yearSlug = yearCategory ? yearCategory.slug : '';
 
     return {
       id: post.id,
       title: decodeHtml(stripHtml(post.title.rendered)),
-      year,
+      group,
       yearSlug,
+      isExhibitionPost,
       featuredImage: getFeaturedImage(post),
-      frontendLink: yearSlug ? `/exhibitions/${yearSlug}` : '#'
+     frontendLink: isExhibitionPost
+  ? `/exhibitions?post=${post.id}`
+  : yearSlug
+    ? `/exhibitions/${yearSlug}`
+    : '#'
     };
   });
 
