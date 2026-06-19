@@ -913,7 +913,8 @@
       grid-template-rows: auto minmax(0, 1fr);
       gap: 24px;
       align-items: stretch;
-      overflow: hidden;
+      overflow-x: visible;
+      overflow-y: hidden;
     }
 
     .exhibitions-list-column {
@@ -932,15 +933,16 @@
     }
 
     .exhibitions-scroll-area {
-      width: 100%;
-      max-width: 100%;
+      width: calc(100vw - 48px);
+      max-width: calc(100vw - 48px);
       overflow-x: auto;
       overflow-y: hidden;
       padding-right: 0;
-      padding-bottom: 8px;
+      padding-bottom: 10px;
       scrollbar-width: none;
       -ms-overflow-style: none;
       -webkit-overflow-scrolling: touch;
+      touch-action: pan-x;
     }
 
     .exhibitions-scroll-area::-webkit-scrollbar {
@@ -952,7 +954,8 @@
       min-width: max-content;
       display: flex;
       flex-direction: row;
-      gap: 22px;
+      flex-wrap: nowrap;
+      gap: 28px;
       padding-bottom: 4px;
     }
 
@@ -961,7 +964,8 @@
       min-width: max-content;
       display: flex;
       flex-direction: row;
-      gap: 22px;
+      flex-wrap: nowrap;
+      gap: 28px;
       margin-top: 18px;
       padding-bottom: 4px;
     }
