@@ -1,7 +1,11 @@
 <script>
+  import { tick } from "svelte";
+
   let { data } = $props();
 
   let selectedWorkId = $state(null);
+  let currentSlideIndex = $state(0);
+  let mobileThumbnailStrip = $state(null);
 
   let worksByGroup = $derived(
     data.works?.reduce((groups, work) => {
@@ -35,13 +39,102 @@
     }),
   );
 
+  let displayWorksByGroup = $derived(() => {
+    const paintings = [];
+    const exhibitions = [];
+
+    sortedWorksByGroup.forEach(([group, works]) => {
+      if (group === "Exhibitions") {
+        exhibitions.push(...works);
+      } else {
+        paintings.push(...works);
+      }
+    });
+
+    const groups = [];
+
+    if (paintings.length > 0) {
+      groups.push(["PAINTINGS", paintings]);
+    }
+
+    if (exhibitions.length > 0) {
+      groups.push(["Exhibitions", exhibitions]);
+    }
+
+    return groups;
+  });
+
+  let mobileWorks = $derived(
+    displayWorksByGroup().flatMap(([group, works]) =>
+      works.map((work) => ({
+        ...work,
+        displayGroup: group,
+      })),
+    ),
+  );
+
   let selectedWork = $derived(
     data.works?.find((work) => work.id === selectedWorkId) ||
-      sortedWorksByGroup?.[0]?.[1]?.[0],
+      displayWorksByGroup()?.[0]?.[1]?.[0],
   );
+
+  let currentMobileWork = $derived(
+    mobileWorks[currentSlideIndex] || selectedWork || mobileWorks[0],
+  );
+
+  async function scrollActiveMobileThumb() {
+    await tick();
+
+    if (!mobileThumbnailStrip) return;
+
+    const activeThumb = mobileThumbnailStrip.querySelector(
+      ".mobile-thumb.active",
+    );
+
+    if (!activeThumb) return;
+
+    activeThumb.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    });
+  }
 
   function selectWork(work) {
     selectedWorkId = work.id;
+
+    const index = mobileWorks.findIndex((item) => item.id === work.id);
+
+    if (index >= 0) {
+      currentSlideIndex = index;
+      scrollActiveMobileThumb();
+    }
+  }
+
+  function selectMobileWork(index) {
+    currentSlideIndex = index;
+    selectedWorkId = mobileWorks[index]?.id || null;
+    scrollActiveMobileThumb();
+  }
+
+  function previousSlide() {
+    if (!mobileWorks.length) return;
+
+    currentSlideIndex =
+      currentSlideIndex === 0 ? mobileWorks.length - 1 : currentSlideIndex - 1;
+
+    selectedWorkId = mobileWorks[currentSlideIndex]?.id || null;
+    scrollActiveMobileThumb();
+  }
+
+  function nextSlide() {
+    if (!mobileWorks.length) return;
+
+    currentSlideIndex =
+      currentSlideIndex === mobileWorks.length - 1 ? 0 : currentSlideIndex + 1;
+
+    selectedWorkId = mobileWorks[currentSlideIndex]?.id || null;
+    scrollActiveMobileThumb();
   }
 </script>
 
@@ -86,14 +179,14 @@
         </div>
 
         <div class="works-scroll-area">
-          <p class="mobile-helper">Tap title to preview, View to open</p>
-
-          {#each sortedWorksByGroup as [year, works]}
+          {#each displayWorksByGroup() as [groupTitle, works]}
             <section
               class="works-year-group"
-              aria-labelledby={`works-year-${year}`}
+              aria-labelledby={`works-group-${groupTitle}`}
             >
-              <h3 class="works-year" id={`works-year-${year}`}>{year}</h3>
+              <h3 class="works-year" id={`works-group-${groupTitle}`}>
+                {groupTitle}
+              </h3>
 
               <div class="works-links">
                 {#each works as work}
@@ -117,35 +210,6 @@
 
                       <h4>{work.title}</h4>
                     </a>
-
-                    <div class="touch-work-row">
-                      <button
-                        type="button"
-                        class="touch-preview-button"
-                        class:active={selectedWork?.id === work.id}
-                        onclick={() => selectWork(work)}
-                        aria-label={`Preview ${work.title}`}
-                      >
-                        {#if work.featuredImage}
-                          <img
-                            src={work.featuredImage}
-                            alt=""
-                            class="work-thumbnail"
-                            loading="lazy"
-                          />
-                        {/if}
-
-                        <h4>{work.title}</h4>
-                      </button>
-
-                      <a
-                        href={work.frontendLink}
-                        class="touch-view-link"
-                        aria-label={`Open ${work.title}`}
-                      >
-                        View
-                      </a>
-                    </div>
                   </div>
                 {/each}
               </div>
@@ -167,6 +231,66 @@
           {/if}
         </div>
       </div>
+
+      <section class="mobile-slider" aria-label="Mobile works slider">
+        <div class="mobile-top-controls">
+          <button
+            type="button"
+            onclick={previousSlide}
+            aria-label="Previous work"
+          >
+            ←
+          </button>
+
+          <button type="button" onclick={nextSlide} aria-label="Next work">
+            →
+          </button>
+        </div>
+
+        {#if currentMobileWork}
+          <h2 class="mobile-current-title">{currentMobileWork.title}</h2>
+        {/if}
+
+        <div class="mobile-image-frame">
+          {#if currentMobileWork}
+            <a
+              href={currentMobileWork.frontendLink}
+              class="mobile-image-link"
+              aria-label={`Open ${currentMobileWork.title}`}
+            >
+              {#if currentMobileWork.featuredImage}
+                {#key currentMobileWork.id}
+                  <img
+                    src={currentMobileWork.featuredImage}
+                    alt={currentMobileWork.title}
+                    class="mobile-main-image"
+                  />
+                {/key}
+              {/if}
+            </a>
+          {/if}
+        </div>
+
+        <div
+          class="mobile-thumbnail-strip"
+          bind:this={mobileThumbnailStrip}
+          aria-label="Slider thumbnails"
+        >
+          {#each mobileWorks as work, index}
+            <button
+              type="button"
+              class="mobile-thumb"
+              class:active={index === currentSlideIndex}
+              onclick={() => selectMobileWork(index)}
+              aria-label={`Preview ${work.title}`}
+            >
+              {#if work.featuredImage}
+                <img src={work.featuredImage} alt="" loading="lazy" />
+              {/if}
+            </button>
+          {/each}
+        </div>
+      </section>
     </section>
   {:else}
     <p class="empty-message">No works found.</p>
@@ -185,7 +309,7 @@
   .home-page {
     width: 100%;
     min-height: 100vh;
-    padding: 116px 40px 92px;
+    padding: 116px clamp(28px, 5vw, 72px) 92px;
     box-sizing: border-box;
     background: #ffffff;
     display: flex;
@@ -209,23 +333,24 @@
 
   .works-feature {
     width: 100%;
+    max-width: 1500px;
     display: grid;
-    grid-template-columns: 320px minmax(0, 1fr);
-    gap: clamp(38px, 5vw, 88px);
+    grid-template-columns: 20% minmax(0, 80%);
+    gap: clamp(14px, 2vw, 32px);
     align-items: center;
+    background: #ffffff;
   }
 
   .works-list-column {
     width: 100%;
-    max-width: 320px;
     height: min(76vh, 820px);
-    justify-self: start;
+    background: #ffffff;
     display: flex;
     flex-direction: column;
   }
 
   .works-heading {
-    margin-bottom: 42px;
+    margin-bottom: 34px;
   }
 
   .works-label {
@@ -241,7 +366,6 @@
   .works-scroll-area {
     min-height: 0;
     overflow-y: auto;
-    padding-right: 4px;
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
@@ -250,14 +374,9 @@
     display: none;
   }
 
-  .mobile-helper {
-    display: none;
-  }
-
   .works-year-group {
     padding: 0;
-    margin-bottom: 32px;
-    border-bottom: 0;
+    margin-bottom: 30px;
   }
 
   .works-year-group:last-child {
@@ -288,17 +407,6 @@
     width: fit-content;
     max-width: 100%;
     display: inline-flex;
-    color: #77716d;
-    text-decoration: none;
-    transition:
-      color 0.35s ease,
-      opacity 0.35s ease;
-  }
-
-  .desktop-work-link {
-    width: fit-content;
-    max-width: 100%;
-    display: inline-flex;
     align-items: center;
     gap: 12px;
     color: #77716d;
@@ -309,14 +417,13 @@
   }
 
   .desktop-thumbnail {
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
     flex-shrink: 0;
     display: block;
     object-fit: cover;
     object-position: center;
     opacity: 0.7;
-    filter: none;
     transition:
       opacity 0.35s ease,
       transform 0.35s ease;
@@ -329,8 +436,7 @@
     transform: scale(1.06);
   }
 
-  .desktop-work-link h4,
-  .touch-preview-button h4 {
+  .desktop-work-link h4 {
     display: inline-block;
     position: relative;
     margin: 0;
@@ -341,8 +447,7 @@
     text-transform: uppercase;
   }
 
-  .desktop-work-link h4::after,
-  .touch-preview-button h4::after {
+  .desktop-work-link h4::after {
     content: "";
     position: absolute;
     left: 0;
@@ -365,35 +470,38 @@
     width: 100%;
   }
 
-  .touch-work-row {
-    display: none;
-  }
-
   .works-image-column {
     width: 100%;
     min-width: 0;
+    height: min(76vh, 820px);
     display: flex;
     align-items: center;
     justify-content: center;
+    background: #ffffff;
   }
 
   .image-frame {
     width: 100%;
-    height: min(76vh, 820px);
+    height: 100%;
+    aspect-ratio: 16 / 10;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f8f6f4;
+    background: #ffffff;
   }
 
   .featured-image {
     width: 100%;
     height: 100%;
     display: block;
-    object-fit: cover;
+    object-fit: contain;
     object-position: center;
     animation: imageReveal 0.85s ease both;
+  }
+
+  .mobile-slider {
+    display: none;
   }
 
   .empty-message {
@@ -405,8 +513,8 @@
   @keyframes imageReveal {
     from {
       opacity: 0;
-      transform: scale(1.015);
-      filter: blur(4px);
+      transform: scale(1.01);
+      filter: blur(3px);
     }
 
     to {
@@ -415,269 +523,182 @@
       filter: blur(0);
     }
   }
-  @media (max-width: 900px) {
-    .home-page {
-      padding: 120px 40px 92px;
-    }
-
-    .works-feature {
-      grid-template-columns: 300px minmax(0, 1fr);
-      gap: 34px;
-    }
-
-    .works-list-column {
-      max-width: 300px;
-      height: min(68vh, 720px);
-    }
-
-    .image-frame {
-      height: min(68vh, 720px);
-    }
-
-    .desktop-work-link {
-      display: none;
-    }
-
-    .touch-work-row {
-      display: grid;
-      grid-template-columns: 46px minmax(0, 1fr);
-      grid-template-rows: auto auto;
-      column-gap: 14px;
-      row-gap: 4px;
-      align-items: start;
-    }
-
-    .touch-preview-button {
-      display: contents;
-      padding: 0;
-      border: 0;
-      background: transparent;
-      color: #77716d;
-      font-family: inherit;
-      text-align: left;
-      cursor: pointer;
-    }
-
-    .work-thumbnail {
-      grid-column: 1;
-      grid-row: 1 / 3;
-      width: 46px;
-      height: 46px;
-      display: block;
-      object-fit: cover;
-      object-position: center;
-      opacity: 0.7;
-      filter: none;
-      transition:
-        opacity 0.35s ease,
-        transform 0.35s ease;
-    }
-
-    .touch-preview-button h4 {
-      grid-column: 2;
-      grid-row: 1;
-      margin: 0;
-      padding: 0;
-      color: #77716d;
-      cursor: pointer;
-      transition: color 0.35s ease;
-    }
-
-    .touch-preview-button:hover h4,
-    .touch-preview-button:focus h4,
-    .touch-preview-button.active h4 {
-      color: #1f1f1f;
-    }
-
-    .touch-preview-button:hover .work-thumbnail,
-    .touch-preview-button:focus .work-thumbnail,
-    .touch-preview-button.active .work-thumbnail {
-      opacity: 1;
-      transform: scale(1.04);
-    }
-
-    .touch-preview-button:hover h4::after,
-    .touch-preview-button:focus h4::after,
-    .touch-preview-button.active h4::after {
-      width: 100%;
-    }
-
-    .touch-view-link {
-      grid-column: 2;
-      grid-row: 2;
-      width: fit-content;
-      margin: 0;
-      color: #aaa39d;
-      font-size: 9px;
-      font-weight: 400;
-      line-height: 1;
-      letter-spacing: 0.12em;
-      text-decoration: none;
-      text-transform: uppercase;
-      white-space: nowrap;
-      transition: color 0.3s ease;
-    }
-
-    .touch-view-link::after {
-      content: "";
-      display: block;
-      width: 100%;
-      height: 1px;
-      margin-top: 3px;
-      background: currentColor;
-      opacity: 0.45;
-    }
-
-    .touch-view-link:hover,
-    .touch-view-link:focus {
-      color: #1f1f1f;
-    }
-  }
 
   @media (max-width: 700px) {
     :global(body) {
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
+      background: #ffffff;
     }
 
     .home-page {
-      height: 100dvh;
-      min-height: 100dvh;
-      padding: 118px 24px 0;
-      align-items: stretch;
-      overflow: hidden;
+      width: 100%;
+      min-height: auto;
+      padding: 118px 22px 0;
+      display: block;
+      overflow: visible;
+      background: #ffffff;
     }
 
     .works-feature {
       width: 100%;
-      height: calc(100dvh - 118px);
-      display: grid;
-      grid-template-columns: 1fr;
-      grid-template-rows: 42dvh minmax(0, 1fr);
-      gap: 22px;
-      align-items: stretch;
-      overflow: hidden;
-    }
-
-    .works-image-column {
-      order: 1;
-      display: flex;
-      min-height: 0;
-      align-items: stretch;
-    }
-
-    .image-frame {
-      width: 100%;
-      height: 100%;
-      max-height: none;
-    }
-
-    .featured-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center;
-    }
-
-    .works-list-column {
-      order: 2;
       max-width: none;
-      height: auto;
-      min-height: 0;
-      overflow: hidden;
-      padding: 0;
+      display: block;
+      overflow: visible;
+      background: #ffffff;
+    }
+
+    .works-list-column,
+    .works-image-column {
+      display: none;
+    }
+
+    .mobile-slider {
+      --mobile-space: 10px;
+      --thumb-gap: 4px;
+      --thumb-size: calc((100vw - 14px - (7 * var(--thumb-gap))) / 8);
+
+      width: 100%;
       display: flex;
       flex-direction: column;
+      gap: var(--mobile-space);
+      overflow: visible;
+      background: #ffffff;
     }
 
-    .works-heading {
-      flex-shrink: 0;
-      margin-bottom: 18px;
+    .mobile-top-controls {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 18px;
+      background: #ffffff;
     }
 
-    .works-label {
+    .mobile-top-controls button {
+      width: auto;
+      height: auto;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: #2f2d2b;
+      font-family: inherit;
       font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      appearance: none;
     }
 
-    .works-scroll-area {
-      min-height: 0;
-      overflow-y: auto;
-      padding-right: 0;
-      padding-bottom: 60px;
+    .mobile-current-title {
+      display: block;
+      margin: 0;
+      color: #2f2d2b;
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 1.2;
+      letter-spacing: 0.08em;
+      text-align: left;
+      text-transform: uppercase;
+      background: #ffffff;
+    }
+
+    .mobile-image-frame {
+      width: 100%;
+      height: clamp(300px, 48vh, 370px);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
+    }
+
+    .mobile-image-link {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: inherit;
+      text-decoration: none;
+      background: #ffffff;
+    }
+
+    .mobile-main-image {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      object-position: center;
+      animation: imageReveal 0.7s ease both;
+      background: #ffffff;
+    }
+
+    .mobile-thumbnail-strip {
+      width: 100%;
+      height: var(--thumb-size);
+      display: flex;
+      gap: var(--thumb-gap);
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 0;
+      background: #ffffff;
       scrollbar-width: none;
       -ms-overflow-style: none;
       -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x proximity;
+      scroll-behavior: smooth;
+      touch-action: pan-x;
     }
 
-    .works-scroll-area::-webkit-scrollbar {
+    .mobile-thumbnail-strip::-webkit-scrollbar {
       display: none;
     }
 
-    .mobile-helper {
-      display: block;
-      margin: 0 0 24px;
-      color: #aaa39d;
-      font-size: 10px;
-      line-height: 1;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-    }
-
-    .works-year-group {
-      margin-bottom: 34px;
-    }
-
-    .works-year-group:last-child {
-      margin-bottom: 30px;
-    }
-
-    .works-year {
-      margin-bottom: 14px;
-      font-size: 10px;
-    }
-
-    .works-links {
-      gap: 18px;
-    }
-
-    .touch-work-row {
-      grid-template-columns: 52px minmax(0, 1fr);
-      grid-template-rows: auto auto;
-      column-gap: 14px;
-      row-gap: 4px;
-      align-items: start;
-    }
-
-    .work-thumbnail {
-      grid-column: 1;
-      grid-row: 1 / 3;
-      width: 52px;
-      height: 52px;
-      opacity: 0.7;
-      filter: none;
-    }
-
-    .touch-preview-button.active .work-thumbnail {
-      opacity: 1;
-      transform: scale(1.04);
-    }
-
-    .touch-preview-button h4 {
-      grid-column: 2;
-      grid-row: 1;
-      margin: 0;
+    .mobile-thumb {
+      width: var(--thumb-size);
+      height: var(--thumb-size);
+      flex: 0 0 var(--thumb-size);
+      aspect-ratio: 1 / 1;
       padding: 0;
-      font-size: 14px;
-      line-height: 1.35;
+      border: 0;
+      background: #ffffff;
+      opacity: 0.45;
+      cursor: pointer;
+      scroll-snap-align: center;
+      transition: opacity 0.3s ease;
     }
 
-    .touch-preview-button h4::after {
-      display: none;
+    .mobile-thumb img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      object-position: center;
+      background: #ffffff;
     }
 
-    .touch-view-link {
-      grid-column: 2;
-      grid-row: 2;
-      margin: 0;
+    .mobile-thumb.active {
+      opacity: 1;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .home-page {
+      padding: 118px 22px 0;
+    }
+
+    .mobile-slider {
+      --mobile-space: 10px;
+      --thumb-gap: 4px;
+      --thumb-size: calc((100vw - 14px - (7 * var(--thumb-gap))) / 8);
+    }
+
+    .mobile-image-frame {
+      height: clamp(280px, 46vh, 350px);
+    }
+
+    .mobile-current-title {
+      font-size: 13px;
     }
   }
 </style>
