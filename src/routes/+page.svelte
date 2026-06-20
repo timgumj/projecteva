@@ -7,6 +7,10 @@
   let currentSlideIndex = $state(0);
   let mobileThumbnailStrip = $state(null);
 
+  let swipeStartX = $state(0);
+  let swipeEndX = $state(0);
+  let wasSwiping = $state(false);
+
   let worksByGroup = $derived(
     data.works?.reduce((groups, work) => {
       const group = work.group || "Works";
@@ -136,6 +140,39 @@
     selectedWorkId = mobileWorks[currentSlideIndex]?.id || null;
     scrollActiveMobileThumb();
   }
+
+  function handleSwipeStart(event) {
+    swipeStartX = event.touches?.[0]?.clientX || event.clientX;
+    swipeEndX = swipeStartX;
+    wasSwiping = false;
+  }
+
+  function handleSwipeMove(event) {
+    swipeEndX = event.touches?.[0]?.clientX || event.clientX;
+
+    if (Math.abs(swipeStartX - swipeEndX) > 10) {
+      wasSwiping = true;
+    }
+  }
+
+  function handleSwipeEnd() {
+    const swipeDistance = swipeStartX - swipeEndX;
+
+    if (Math.abs(swipeDistance) < 50) return;
+
+    if (swipeDistance > 0) {
+      nextSlide();
+    } else {
+      previousSlide();
+    }
+  }
+
+  function handleMobileImageClick(event) {
+    if (wasSwiping) {
+      event.preventDefault();
+      wasSwiping = false;
+    }
+  }
 </script>
 
 <svelte:head>
@@ -233,6 +270,10 @@
       </div>
 
       <section class="mobile-slider" aria-label="Mobile works slider">
+        <p class="mobile-rabbit-text">
+          when going down the rabbit hole prepare to chill with lions.
+        </p>
+
         <div class="mobile-top-controls">
           <button
             type="button"
@@ -251,12 +292,23 @@
           <h2 class="mobile-current-title">{currentMobileWork.title}</h2>
         {/if}
 
-        <div class="mobile-image-frame">
+        <div
+          class="mobile-image-frame"
+          role="region"
+          aria-label="Swipe image slider"
+          ontouchstart={handleSwipeStart}
+          ontouchmove={handleSwipeMove}
+          ontouchend={handleSwipeEnd}
+          onpointerdown={handleSwipeStart}
+          onpointermove={handleSwipeMove}
+          onpointerup={handleSwipeEnd}
+        >
           {#if currentMobileWork}
             <a
               href={currentMobileWork.frontendLink}
               class="mobile-image-link"
               aria-label={`Open ${currentMobileWork.title}`}
+              onclick={handleMobileImageClick}
             >
               {#if currentMobileWork.featuredImage}
                 {#key currentMobileWork.id}
@@ -270,7 +322,6 @@
             </a>
           {/if}
         </div>
-
         <div
           class="mobile-thumbnail-strip"
           bind:this={mobileThumbnailStrip}
@@ -524,6 +575,53 @@
     }
   }
 
+  @media (min-width: 701px) and (max-width: 1024px) {
+    .home-page {
+      align-items: flex-start;
+      padding-top: 116px;
+    }
+
+    .works-feature {
+      grid-template-columns: 40% 60%;
+      align-items: flex-start;
+    }
+
+    .works-list-column,
+    .works-image-column {
+      height: 68vh;
+      max-height: 680px;
+    }
+
+    .works-list-column {
+      overflow: hidden;
+    }
+
+    .works-scroll-area {
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .works-image-column {
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .image-frame {
+      width: auto;
+      height: 100%;
+      aspect-ratio: 3 / 4;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .featured-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+    }
+  }
+
   @media (max-width: 700px) {
     :global(body) {
       overflow-x: hidden;
@@ -534,7 +632,7 @@
     .home-page {
       width: 100%;
       min-height: auto;
-      padding: 118px 22px 0;
+      padding: 80px 22px 0;
       display: block;
       overflow: visible;
       background: #ffffff;
@@ -566,27 +664,17 @@
       background: #ffffff;
     }
 
-    .mobile-top-controls {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 18px;
-      background: #ffffff;
-    }
-
-    .mobile-top-controls button {
-      width: auto;
-      height: auto;
-      padding: 0;
-      border: 0;
-      background: transparent;
+    .mobile-rabbit-text {
+      display: block;
+      margin-bottom: 2px;
       color: #2f2d2b;
-      font-family: inherit;
-      font-size: 18px;
-      line-height: 1;
-      cursor: pointer;
-      appearance: none;
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.2;
+      letter-spacing: 0.02em;
+      text-align: left;
+      background: #ffffff;
+      text-transform: uppercase;
     }
 
     .mobile-current-title {
@@ -602,6 +690,29 @@
       background: #ffffff;
     }
 
+    .mobile-top-controls {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 22px;
+      background: #ffffff;
+    }
+
+    .mobile-top-controls button {
+      width: auto;
+      height: auto;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: #2f2d2b;
+      font-family: inherit;
+      font-size: 36px;
+      line-height: 1;
+      cursor: pointer;
+      appearance: none;
+    }
+
     .mobile-image-frame {
       width: 100%;
       height: clamp(300px, 48vh, 370px);
@@ -610,6 +721,8 @@
       align-items: center;
       justify-content: center;
       background: #ffffff;
+      touch-action: pan-y;
+      user-select: none;
     }
 
     .mobile-image-link {
@@ -631,6 +744,8 @@
       object-position: center;
       animation: imageReveal 0.7s ease both;
       background: #ffffff;
+      pointer-events: none;
+      user-select: none;
     }
 
     .mobile-thumbnail-strip {
@@ -684,7 +799,7 @@
 
   @media (max-width: 420px) {
     .home-page {
-      padding: 118px 22px 0;
+      padding: 80px 22px 0;
     }
 
     .mobile-slider {
@@ -699,6 +814,19 @@
 
     .mobile-current-title {
       font-size: 13px;
+    }
+
+    .mobile-rabbit-text {
+      display: block;
+      margin-bottom: 2px;
+      color: #2f2d2b;
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.2;
+      letter-spacing: 0.02em;
+      text-align: left;
+      background: #ffffff;
+      text-transform: uppercase;
     }
   }
 </style>
