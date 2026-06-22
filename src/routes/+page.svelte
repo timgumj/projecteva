@@ -13,6 +13,55 @@
     return value || "";
   }
 
+  function slugify(value = "") {
+    return value
+      .toString()
+      .toLowerCase()
+      .trim()
+      .replace(/&/g, "and")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
+  function normalizeCategorySlug(work) {
+    const rawSlug =
+      work.categorySlug ||
+      work.slug ||
+      work.groupSlug ||
+      slugify(work.group || "");
+
+    const slug = slugify(rawSlug);
+
+    if (slug === "painting" || slug === "paintings") return "painting";
+    if (slug === "performance" || slug === "performances")
+      return "performances";
+    if (slug === "exhibition" || slug === "exhibitions") return "exhibitions";
+
+    return slug;
+  }
+
+  function getWorkLink(work) {
+    const categorySlug = normalizeCategorySlug(work);
+
+    if (categorySlug === "paintings") {
+      return `/paintings?post=${work.id}`;
+    }
+
+    if (categorySlug === "performances") {
+      return `/performances?post=${work.id}`;
+    }
+
+    if (categorySlug === "exhibitions") {
+      return `/exhibitions?post=${work.id}`;
+    }
+
+    if (work.frontendLink && work.frontendLink !== "#") {
+      return work.frontendLink;
+    }
+
+    return `/works?post=${work.id}`;
+  }
+
   function getRawCategories(work) {
     const possibleCategories =
       work.categories ||
@@ -59,22 +108,18 @@
       return [work.group.toUpperCase()];
     }
 
-    return [];
+    return ["HOME PAGE"];
   }
 
   let categories = $derived(() => {
     const found = new Map();
 
     allWorks.forEach((work) => {
-      const parentCategories = getParentCategories(work);
+      const categoryNames = getWorkCategoryNames(work);
 
-      parentCategories.forEach((category) => {
-        found.set(category.name.toUpperCase(), category.name.toUpperCase());
+      categoryNames.forEach((categoryName) => {
+        found.set(categoryName, categoryName);
       });
-
-      if (parentCategories.length === 0 && work.group) {
-        found.set(work.group.toUpperCase(), work.group.toUpperCase());
-      }
     });
 
     return ["ALL WORK", ...Array.from(found.values())];
@@ -188,7 +233,7 @@
       >
         {#each filteredWorks() as work, index}
           <a
-            href={work.frontendLink}
+            href={getWorkLink(work)}
             class="work-card"
             class:active={activeWork?.id === work.id}
             onmouseenter={() => setHoveredWork(work)}

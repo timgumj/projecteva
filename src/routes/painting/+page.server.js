@@ -40,7 +40,7 @@ function extractGalleryImages(post) {
     if (src && !images.some((image) => image.src === src)) {
       images.push({
         src,
-        alt,
+        alt
       });
     }
   }
@@ -48,81 +48,54 @@ function extractGalleryImages(post) {
   return images;
 }
 
-function getYearCategory(post, categoriesMap, paintingCategory) {
-  const postCategories = post.categories || [];
+function getPostYear(post) {
+  if (!post.date) return "Works";
 
-  for (const categoryId of postCategories) {
-    const category = categoriesMap[categoryId];
-
-    if (!category) continue;
-
-    if (/^\d{4}$/.test(category.slug)) {
-      if (!paintingCategory || category.parent === paintingCategory.id) {
-        return category;
-      }
-    }
-
-    if (category.parent && categoriesMap[category.parent]) {
-      const parentCategory = categoriesMap[category.parent];
-
-      if (/^\d{4}$/.test(parentCategory.slug)) {
-        if (!paintingCategory || parentCategory.parent === paintingCategory.id) {
-          return parentCategory;
-        }
-      }
-    }
-  }
-
-  return null;
+  return String(new Date(post.date).getFullYear());
 }
 
 export async function load({ fetch, url }) {
-  const postsResponse = await fetch(
-    `${PUBLIC_WP_API_URL}/posts?_embed&per_page=100`,
+  const categoriesResponse = await fetch(
+    `${PUBLIC_WP_API_URL}/categories?per_page=100`
   );
 
-  const categoriesResponse = await fetch(
-    `${PUBLIC_WP_API_URL}/categories?per_page=100`,
+  const categories = await categoriesResponse.json();
+
+  const paintingsCategory = categories.find(
+    (category) => category.slug === "paintings"
+  );
+
+  if (!paintingsCategory) {
+    return {
+      paintings: [],
+      requestedPostId: null
+    };
+  }
+
+  const postsResponse = await fetch(
+    `${PUBLIC_WP_API_URL}/posts?_embed&per_page=100&categories=${paintingsCategory.id}`
   );
 
   const posts = await postsResponse.json();
-  const categories = await categoriesResponse.json();
 
-  const categoriesMap = {};
+  const paintings = posts.map((post) => {
+    const year = getPostYear(post);
+    const title = decodeHtml(stripHtml(post.title?.rendered));
+    const info = getFirstH2(post);
+    const images = extractGalleryImages(post);
 
-  categories.forEach((category) => {
-    categoriesMap[category.id] = category;
+    return {
+      id: post.id,
+      year,
+      postSlug: String(post.id),
+      title,
+      info,
+      images
+    };
   });
-
-  const paintingCategory = categories.find(
-    (category) => category.slug === "painting",
-  );
-
-  const paintings = posts
-    .map((post) => {
-      const yearCategory = getYearCategory(post, categoriesMap, paintingCategory);
-
-      if (!yearCategory) return null;
-
-      const year = decodeHtml(yearCategory.name);
-      const title = decodeHtml(stripHtml(post.title?.rendered));
-      const info = getFirstH2(post);
-      const images = extractGalleryImages(post);
-
-      return {
-        id: post.id,
-        year,
-        postSlug: String(post.id),
-        title,
-        info,
-        images,
-      };
-    })
-    .filter(Boolean)
-    .sort((a, b) => Number(b.year) - Number(a.year));
 
   return {
     paintings,
-    requestedPostId: Number(url.searchParams.get("post")) || null,
+    requestedPostId: Number(url.searchParams.get("post")) || null
   };
 }

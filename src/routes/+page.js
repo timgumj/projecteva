@@ -22,7 +22,11 @@ function getFeaturedImage(post) {
   );
 }
 
-function getYearCategory(post, categoriesMap) {
+function formatCategoryName(category) {
+  return decodeHtml(category?.name || category?.slug || 'Home Page');
+}
+
+function getMainCategory(post, categoriesMap) {
   const postCategories = post.categories || [];
 
   for (const categoryId of postCategories) {
@@ -30,20 +34,30 @@ function getYearCategory(post, categoriesMap) {
 
     if (!category) continue;
 
-    if (/^\d{4}$/.test(category.slug)) {
-      return category;
-    }
-
-    if (category.parent && categoriesMap[category.parent]) {
-      const parentCategory = categoriesMap[category.parent];
-
-      if (/^\d{4}$/.test(parentCategory.slug)) {
-        return parentCategory;
-      }
-    }
+    return category;
   }
 
   return null;
+}
+
+function getFrontendLink(post, category) {
+  if (!category) {
+    return `/works?post=${post.id}`;
+  }
+
+  if (category.slug === 'exhibitions') {
+    return `/exhibitions?post=${post.id}`;
+  }
+
+  if (category.slug === 'paintings') {
+    return `/painting?post=${post.id}`;
+  }
+
+  if (category.slug === 'performances') {
+    return `/performances?post=${post.id}`;
+  }
+
+  return `/works?post=${post.id}`;
 }
 
 export async function load({ fetch }) {
@@ -64,39 +78,18 @@ export async function load({ fetch }) {
     categoriesMap[category.id] = category;
   });
 
-  const exhibitionsCategory = categories.find(
-    (category) => category.slug === 'exhibitions'
-  );
-
   const works = posts.map((post) => {
-    const postCategoryIds = post.categories || [];
-
-    const isExhibitionPost = exhibitionsCategory
-      ? postCategoryIds.includes(exhibitionsCategory.id)
-      : false;
-
-    const yearCategory = getYearCategory(post, categoriesMap);
-
-    const group = isExhibitionPost
-      ? 'Exhibitions'
-      : yearCategory
-        ? decodeHtml(yearCategory.name)
-        : 'Works';
-
-    const yearSlug = yearCategory ? yearCategory.slug : '';
+    const mainCategory = getMainCategory(post, categoriesMap);
+    const group = mainCategory ? formatCategoryName(mainCategory) : 'Home Page';
 
     return {
       id: post.id,
       title: decodeHtml(stripHtml(post.title.rendered)),
       group,
-      yearSlug,
-      isExhibitionPost,
+      categorySlug: mainCategory?.slug || 'home-page',
+      categoryId: mainCategory?.id || null,
       featuredImage: getFeaturedImage(post),
-     frontendLink: isExhibitionPost
-  ? `/exhibitions?post=${post.id}`
-  : yearSlug
-    ? `/exhibitions/${yearSlug}`
-    : '#'
+      frontendLink: getFrontendLink(post, mainCategory)
     };
   });
 
