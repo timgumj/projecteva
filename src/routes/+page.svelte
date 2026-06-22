@@ -5,6 +5,8 @@
   let hoveredWorkId = $state(null);
   let workGridElement = $state(null);
 
+  const artistName = "Eva Full Name";
+
   let allWorks = $derived(data.works || []);
 
   function cleanHtml(value) {
@@ -120,11 +122,11 @@
 </script>
 
 <svelte:head>
-  <title>Project Eva | Contemporary Artist Portfolio</title>
+  <title>{artistName} | Contemporary Artist Portfolio and Exhibitions</title>
 
   <meta
     name="description"
-    content="Project Eva is a minimalist contemporary artist portfolio featuring selected works, exhibitions, and visual projects."
+    content="{artistName} presents selected contemporary artworks, exhibitions, visual projects and case studies in a minimalist artist portfolio."
   />
 
   <meta name="robots" content="index, follow" />
@@ -202,13 +204,15 @@
               </figure>
             {/if}
 
-            <span class="work-number">
-              {String(index + 1).padStart(2, "0")}
-            </span>
+            <div class="mobile-card-text">
+              <span class="work-number">
+                {String(index + 1).padStart(2, "0")}
+              </span>
 
-            <span class="mobile-work-title">
-              {work.title}
-            </span>
+              <span class="mobile-work-title">
+                {work.title}
+              </span>
+            </div>
           </a>
         {/each}
 
@@ -352,7 +356,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 12px;
     row-gap: 12px;
-    padding: 0 0 68px;
+    padding: 0;
   }
 
   .work-card {
@@ -404,6 +408,10 @@
     object-fit: contain;
     transform: scale(1);
     filter: none;
+  }
+
+  .mobile-card-text {
+    display: contents;
   }
 
   .work-number {
@@ -547,8 +555,8 @@
 
     .project-preview h1 {
       max-width: 520px;
-      margin: 0 0 14px;
-      font-size: clamp(22px, 4.2vw, 34px);
+      margin: 0 0 8px;
+      font-size: clamp(18px, 3.2vw, 25px);
       text-align: left;
     }
 
@@ -584,7 +592,7 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       align-content: start;
-      gap: 12px;
+      gap: 18px 12px;
       padding: 0 0 calc(150px + env(safe-area-inset-bottom));
       scrollbar-width: none;
       scrollbar-color: transparent transparent;
@@ -607,7 +615,18 @@
       background: transparent;
     }
 
-    .work-card,
+    .work-card {
+      min-height: auto;
+      overflow: visible;
+      background: transparent;
+    }
+
+    .work-card figure {
+      height: 440px;
+      background: #eeeeee;
+      overflow: hidden;
+    }
+
     .work-card img {
       min-height: 440px;
     }
@@ -625,18 +644,21 @@
       object-fit: cover;
     }
 
+    .mobile-card-text {
+      display: block;
+      margin-top: 8px;
+    }
+
     .work-number {
+      position: static;
+      display: block;
       opacity: 1;
       font-size: 14px;
     }
 
     .mobile-work-title {
-      position: absolute;
-      top: 29px;
-      left: 10px;
-      right: 10px;
-      z-index: 4;
       display: block;
+      margin-top: 4px;
       color: #000000;
       font-size: 12px;
       font-weight: 700;
@@ -694,17 +716,10 @@
       line-height: 1.08;
     }
 
-    .project-preview {
-      width: 100%;
-      max-width: none;
-      display: block;
-      text-align: left;
-    }
-
     .project-preview h1 {
       max-width: 100%;
-      margin: 0 0 10px;
-      font-size: clamp(18px, 5.4vw, 25px);
+      margin: 0 0 8px;
+      font-size: clamp(15px, 4.2vw, 20px);
       text-align: left;
     }
 
@@ -715,29 +730,14 @@
 
     .work-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
+      gap: 18px 10px;
       padding: 0 0 calc(145px + env(safe-area-inset-bottom));
-      scrollbar-width: none;
-      scrollbar-color: transparent transparent;
-      -ms-overflow-style: none;
     }
 
-    .work-grid::-webkit-scrollbar {
-      width: 0;
-      height: 0;
-      display: none;
-      background: transparent;
+    .work-card figure {
+      height: 260px;
     }
 
-    .work-grid::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .work-grid::-webkit-scrollbar-thumb {
-      background: transparent;
-    }
-
-    .work-card,
     .work-card img {
       min-height: 260px;
     }
@@ -751,14 +751,10 @@
     }
 
     .work-number {
-      opacity: 1;
       font-size: 12px;
     }
 
     .mobile-work-title {
-      top: 27px;
-      left: 10px;
-      right: 10px;
       font-size: 10px;
       font-weight: 700;
       line-height: 1.08;
@@ -779,10 +775,13 @@
     }
 
     .project-preview h1 {
-      font-size: clamp(17px, 5vw, 22px);
+      font-size: clamp(14px, 4vw, 18px);
     }
 
-    .work-card,
+    .work-card figure {
+      height: 220px;
+    }
+
     .work-card img {
       min-height: 220px;
     }
