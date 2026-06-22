@@ -1,4 +1,6 @@
 <script>
+  import { page } from "$app/state";
+
   let { children, data } = $props();
 
   let menuOpen = $state(false);
@@ -9,6 +11,11 @@
   const eventItems = data?.eventMenuItems || [];
 
   const menuItems = [
+    {
+      label: "Home",
+      href: "/",
+      children: [],
+    },
     {
       label: "About",
       href: "/about",
@@ -29,7 +36,48 @@
       href: "/event",
       children: eventItems,
     },
+    {
+      label: "Contact",
+      href: "/contact",
+      children: [],
+    },
+    {
+      label: "Archive",
+      href: "/archive",
+      children: [],
+    },
   ];
+
+  let menuImages = $derived(() => {
+    const images = [];
+
+    [
+      ...paintingItems,
+      ...exhibitionItems,
+      ...eventItems,
+      ...aboutItems,
+    ].forEach((item) => {
+      if (item.featuredImage && images.length < 10) {
+        images.push(item.featuredImage);
+      }
+    });
+
+    return images;
+  });
+
+  let currentPageLabel = $derived(() => {
+    const path = page.url.pathname;
+
+    if (path === "/") return "Home";
+    if (path.startsWith("/about")) return "About";
+    if (path.startsWith("/painting")) return "Paintings";
+    if (path.startsWith("/exhibitions")) return "Exhibitions";
+    if (path.startsWith("/event")) return "Events";
+    if (path.startsWith("/archive")) return "Archive";
+    if (path.startsWith("/contact")) return "Contact";
+
+    return "Work";
+  });
 
   function toggleMenu() {
     menuOpen = !menuOpen;
@@ -40,8 +88,26 @@
   }
 </script>
 
-<header class="site-header">
+<header class="site-header" class:menu-is-open={menuOpen}>
   <a href="/" class="logo" onclick={closeMenu}>Eva Eichinger</a>
+
+  <div class="desktop-page-label">
+    {currentPageLabel()}
+  </div>
+
+  <button
+    class="desktop-menu-text"
+    type="button"
+    aria-label={menuOpen ? "Close menu" : "Open menu"}
+    aria-expanded={menuOpen}
+    onclick={toggleMenu}
+  >
+    {menuOpen ? "Close" : "Menu"}
+  </button>
+
+  <a href="/archive" class="desktop-archive-fixed" onclick={closeMenu}
+    >Archive</a
+  >
 
   <button
     class="menu-toggle"
@@ -56,34 +122,60 @@
   </button>
 
   <nav class:open={menuOpen} class="main-nav" aria-label="Main navigation">
-    <div class="menu-grid">
-      {#each menuItems as item}
-        <div class="menu-grid-item">
-          <a href={item.href} class="main-menu-link" onclick={closeMenu}>
-            {item.label}
-          </a>
+    <div class="desktop-menu-brand">Eva Eichinger</div>
 
-          {#if item.children && item.children.length > 0}
-            <div class="submenu-grid">
-              {#each item.children as child}
-                <a href={child.href} class="submenu-link" onclick={closeMenu}>
-                  {#if child.featuredImage}
-                    <img
-                      src={child.featuredImage}
-                      alt=""
-                      class="submenu-thumb"
-                      loading="lazy"
-                    />
-                  {/if}
-
-                  <span>{child.label}</span>
-                </a>
-              {/each}
-            </div>
-          {/if}
-        </div>
-      {/each}
+    <div class="desktop-menu-images" aria-hidden="true">
+      {#if menuImages().length > 0}
+        {#each menuImages() as image}
+          <div class="desktop-menu-image">
+            <img src={image} alt="" loading="lazy" />
+          </div>
+        {/each}
+      {/if}
     </div>
+
+    <div class="menu-links-area">
+      <div class="menu-grid">
+        {#each menuItems as item}
+          <div class="menu-grid-item">
+            <a href={item.href} class="main-menu-link" onclick={closeMenu}>
+              {item.label}
+            </a>
+
+            {#if item.children && item.children.length > 0}
+              <div class="submenu-grid">
+                {#each item.children as child}
+                  <a href={child.href} class="submenu-link" onclick={closeMenu}>
+                    {#if child.featuredImage}
+                      <img
+                        src={child.featuredImage}
+                        alt=""
+                        class="submenu-thumb"
+                        loading="lazy"
+                      />
+                    {/if}
+
+                    <span>{child.label}</span>
+                  </a>
+                {/each}
+              </div>
+            {/if}
+          </div>
+        {/each}
+      </div>
+
+      <div class="desktop-social-links">
+        <a href="https://www.linkedin.com" target="_blank" rel="noreferrer">
+          Linkedin
+        </a>
+
+        <a href="https://www.instagram.com" target="_blank" rel="noreferrer">
+          Instagram
+        </a>
+      </div>
+    </div>
+
+    <div class="desktop-menu-rights">All rights reserved ©Eva Eichinger</div>
 
     <div class="mobile-menu-extra">
       <div class="mobile-social-icons">
@@ -133,286 +225,273 @@
 
   .site-header {
     position: fixed;
-    top: 0;
-    left: 0;
+    inset: 0 0 auto;
     z-index: 100;
     width: 100%;
-    box-sizing: border-box;
-    padding: 28px 210px 22px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #ffffff;
+    pointer-events: none;
   }
 
   .logo {
+    position: fixed;
+    top: 32px;
+    left: 28px;
+    z-index: 105;
     color: #2f2d2b;
-    text-decoration: none;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 1.65rem;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 21px;
     font-weight: 400;
     line-height: 1;
-    letter-spacing: 0.055em;
-    transition: opacity 0.25s ease;
-    z-index: 102;
-  }
-
-  .logo::after {
-    content: "";
-    display: block;
-    width: 100%;
-    height: 1px;
-    margin-top: 7px;
-    background: currentColor;
-    opacity: 0.55;
+    letter-spacing: -0.04em;
+    pointer-events: auto;
+    transition:
+      color 0.25s ease,
+      opacity 0.25s ease;
   }
 
   .logo:hover {
     opacity: 0.7;
   }
 
-  .menu-toggle {
-    position: relative;
-    z-index: 102;
-    display: flex;
-    width: 34px;
-    height: 26px;
+  .desktop-page-label {
+    position: fixed;
+    top: 32px;
+    right: 28px;
+    z-index: 105;
+    color: #8e8781;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
+    pointer-events: none;
+    transition: color 0.25s ease;
+  }
+
+  .desktop-menu-text {
+    position: fixed;
+    top: 50%;
+    right: 28px;
+    z-index: 105;
     padding: 0;
-    border: none;
+    border: 0;
     background: transparent;
-    flex-direction: column;
-    justify-content: space-between;
+    color: #000000;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 15px;
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
     cursor: pointer;
-  }
-
-  @media (min-width: 1025px) {
-    .menu-toggle {
-      transform: translateX(0px);
-    }
-  }
-
-  .menu-toggle span {
-    display: block;
-    width: 100%;
-    height: 1px;
-    background: #2f2d2b;
+    transform: translateY(-50%);
+    pointer-events: auto;
     transition:
-      transform 0.25s ease,
+      color 0.25s ease,
       opacity 0.25s ease;
   }
 
-  .menu-toggle[aria-expanded="true"] span:nth-child(1) {
-    transform: translateY(12.5px) rotate(45deg);
+  .desktop-menu-text:hover {
+    opacity: 0.6;
   }
 
-  .menu-toggle[aria-expanded="true"] span:nth-child(2) {
-    opacity: 0;
+  .desktop-archive-fixed {
+    position: fixed;
+    right: 28px;
+    bottom: 52px;
+    z-index: 105;
+    color: #000000;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 15px;
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+    text-decoration: none;
+    pointer-events: auto;
+    transition:
+      color 0.25s ease,
+      opacity 0.25s ease;
   }
 
-  .menu-toggle[aria-expanded="true"] span:nth-child(3) {
-    transform: translateY(-12.5px) rotate(-45deg);
+  .desktop-archive-fixed:hover {
+    opacity: 0.6;
+  }
+
+  .site-header.menu-is-open .desktop-page-label,
+  .site-header.menu-is-open .desktop-menu-text,
+  .site-header.menu-is-open .desktop-archive-fixed {
+    color: #ffffff;
+  }
+
+  .menu-toggle {
+    display: none;
   }
 
   .main-nav {
     position: fixed;
     inset: 0;
-    z-index: 101;
+    z-index: 103;
     width: 100%;
     height: 100dvh;
-    padding: 104px 210px 38px;
-    box-sizing: border-box;
-    display: grid;
-    grid-template-rows: minmax(0, 1fr) auto;
-    gap: 24px;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.98);
-    transform: translateX(100%);
+
+    background-color: #000000;
+    background-image: none;
+
+    color: #ffffff;
     opacity: 0;
+    pointer-events: none;
+    transform: translateY(100%);
+
     transition:
-      transform 0.45s cubic-bezier(0.77, 0, 0.175, 1),
-      opacity 0.35s ease;
+      transform 0.55s cubic-bezier(0.77, 0, 0.175, 1),
+      opacity 0.4s ease;
+  }
+
+  .site-header.menu-is-open .logo,
+  .site-header.menu-is-open .desktop-page-label,
+  .site-header.menu-is-open .desktop-archive-fixed {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .site-header.menu-is-open .desktop-menu-text {
+    color: #ffffff;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
   }
 
   .main-nav.open {
-    transform: translateX(0);
     opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
   }
 
-  .menu-grid {
-    width: 100%;
-    max-width: 1480px;
-    min-height: 0;
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: clamp(34px, 4vw, 76px);
-    align-self: start;
-    overflow: hidden;
-  }
-
-  .menu-grid-item {
-    min-height: 0;
-    height: 100%;
-    box-sizing: border-box;
-    overflow: hidden;
-  }
-
-  .main-nav a {
-    color: #6f6b68;
-    text-decoration: none;
-    font-family: Georgia, "Times New Roman", serif;
-    transition:
-      color 0.3s ease,
-      opacity 0.3s ease,
-      transform 0.3s ease;
-  }
-
-  .main-menu-link {
-    display: inline-block;
-    color: #2f2d2b;
-    font-size: clamp(1.05rem, 1.18vw, 1.36rem);
-    font-weight: 300;
+  .desktop-menu-brand {
+    position: absolute;
+    left: 28px;
+    bottom: 45%;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: clamp(30px, 3vw, 44px);
+    font-weight: 400;
     line-height: 1;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+    letter-spacing: -0.055em;
   }
 
-  .main-menu-link::after {
-    content: "";
-    display: block;
-    width: 0;
-    height: 1px;
-    margin-top: 13px;
-    background: currentColor;
-    transition: width 0.45s ease;
-  }
-
-  .menu-grid-item:hover .main-menu-link::after,
-  .main-menu-link:focus::after {
-    width: 100%;
-  }
-
-  .submenu-grid {
-    max-height: calc(100dvh - 260px);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 34px;
+  .desktop-menu-images {
+    position: absolute;
+    top: 0;
+    left: 30vw;
+    width: 160px;
+    height: 100dvh;
     overflow-y: auto;
-    padding-right: 8px;
+    overflow-x: hidden;
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
 
-  .submenu-grid::-webkit-scrollbar {
+  .desktop-menu-images::-webkit-scrollbar {
     display: none;
   }
 
-  .submenu-link {
+  .desktop-menu-image {
     width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: #77716d;
-    font-size: 0.72rem;
-    font-weight: 300;
-    line-height: 1.25;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-    opacity: 0.72;
+    height: 230px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    background: #222222;
   }
 
-  .submenu-link span {
-    min-width: 0;
-  }
-
-  .submenu-link:hover,
-  .submenu-link:focus {
-    color: #2f2d2b;
-    opacity: 1;
-    transform: translateX(4px);
-  }
-
-  .submenu-thumb {
-    width: 34px;
-    height: 34px;
-    flex: 0 0 34px;
+  .desktop-menu-image img {
+    width: 100%;
+    height: 100%;
     display: block;
     object-fit: cover;
     object-position: center;
     filter: grayscale(100%);
-    opacity: 0.58;
-    transition:
-      filter 0.35s ease,
-      opacity 0.35s ease,
-      transform 0.35s ease;
+    opacity: 0.82;
   }
 
-  .submenu-link:hover .submenu-thumb,
-  .submenu-link:focus .submenu-thumb {
-    filter: grayscale(0%);
-    opacity: 1;
-    transform: scale(1.04);
+  .menu-links-area {
+    position: absolute;
+    left: 50vw;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .menu-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .menu-grid-item {
+    margin: 0;
+    padding: 0;
+  }
+
+  .main-nav a {
+    color: #ffffff;
+    text-decoration: none;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  .main-menu-link {
+    display: inline-block;
+    color: #ffffff;
+    font-size: clamp(48px, 4.2vw, 76px);
+    font-weight: 400;
+    line-height: 0.96;
+    letter-spacing: -0.075em;
+    text-transform: none;
+    transition:
+      opacity 0.3s ease,
+      transform 0.3s ease;
+  }
+
+  .main-menu-link:hover,
+  .main-menu-link:focus {
+    opacity: 0.6;
+    transform: translateX(8px);
+  }
+
+  .submenu-grid {
+    display: none;
+  }
+
+  .desktop-social-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 72px;
+  }
+
+  .desktop-social-links a {
+    width: fit-content;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 900;
+    line-height: 0.95;
+    text-transform: uppercase;
+  }
+
+  .desktop-menu-rights {
+    position: absolute;
+    right: 28px;
+    bottom: 28px;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
   }
 
   .mobile-menu-extra {
-    max-width: 1480px;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 34px;
-    align-items: end;
-    padding-top: 18px;
-  }
-
-  .mobile-social-icons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    margin-bottom: 0;
-  }
-
-  .mobile-social-icons a {
-    color: #2f2d2b;
-    font-size: 0.8rem;
-    font-weight: 300;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    opacity: 0.76;
-  }
-
-  .mobile-social-icons a:hover,
-  .mobile-social-icons a:focus {
-    opacity: 1;
-  }
-
-  .mobile-contact-info {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-    color: #6f6b68;
-    font-size: 0.8rem;
-    font-weight: 300;
-    line-height: 1.35;
-    text-align: right;
-  }
-
-  .mobile-contact-info p {
-    margin: 0;
-    color: #2f2d2b;
-    font-size: 0.84rem;
-    font-weight: 400;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .mobile-contact-info a {
-    color: #6f6b68;
-    font-size: 0.8rem;
-    line-height: 1.35;
-  }
-
-  .mobile-contact-info address {
-    margin: 0;
-    font-style: normal;
+    display: none;
   }
 
   .site-footer {
@@ -424,7 +503,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 210px;
+    padding: 18px 28px;
     box-sizing: border-box;
     color: #8e8781;
     font-size: 14px;
@@ -438,23 +517,99 @@
   }
 
   @media (max-width: 1024px) {
-    .site-header {
-      padding: 22px 24px 18px;
+    .logo {
+      top: 22px;
+      left: 24px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.45rem;
+      letter-spacing: 0.055em;
     }
 
-    .logo {
-      font-size: 1.45rem;
+    .logo::after {
+      content: "";
+      display: block;
+      width: 100%;
+      height: 1px;
+      margin-top: 7px;
+      background: currentColor;
+      opacity: 0.55;
+    }
+
+    .desktop-page-label,
+    .desktop-menu-text,
+    .desktop-archive-fixed,
+    .desktop-menu-brand,
+    .desktop-menu-images,
+    .desktop-social-links,
+    .desktop-menu-rights {
+      display: none;
+    }
+
+    .menu-toggle {
+      position: fixed;
+      top: 22px;
+      right: 24px;
+      z-index: 105;
+      display: flex;
+      width: 34px;
+      height: 26px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .menu-toggle span {
+      display: block;
+      width: 100%;
+      height: 1px;
+      background: #2f2d2b;
+      transition:
+        transform 0.25s ease,
+        opacity 0.25s ease,
+        background 0.25s ease;
+    }
+
+    .menu-toggle[aria-expanded="true"] span {
+      background: #2f2d2b;
+    }
+
+    .menu-toggle[aria-expanded="true"] span:nth-child(1) {
+      transform: translateY(12.5px) rotate(45deg);
+    }
+
+    .menu-toggle[aria-expanded="true"] span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .menu-toggle[aria-expanded="true"] span:nth-child(3) {
+      transform: translateY(-12.5px) rotate(-45deg);
     }
 
     .main-nav {
       height: 100dvh;
       padding: 120px 24px 40px;
+      box-sizing: border-box;
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
       gap: 34px;
       overflow-y: auto;
       background: #ffffff;
+      color: #4d4a47;
+      transform: translateX(100%);
+    }
+
+    .main-nav.open {
+      transform: translateX(0);
+    }
+
+    .menu-links-area {
+      position: static;
+      transform: none;
     }
 
     .menu-grid {
@@ -464,20 +619,24 @@
       overflow: visible;
     }
 
-    .menu-grid-item {
-      height: auto;
-      min-height: auto;
-      padding: 0;
-      overflow: visible;
+    .main-nav a {
+      color: #6f6b68;
+      font-family: Georgia, "Times New Roman", serif;
     }
 
     .main-menu-link {
+      color: #2f2d2b;
       font-size: 1.25rem;
+      font-weight: 300;
+      line-height: 1;
       letter-spacing: 0.055em;
+      text-transform: uppercase;
     }
 
-    .main-menu-link::after {
-      display: none;
+    .main-menu-link:hover,
+    .main-menu-link:focus {
+      opacity: 0.7;
+      transform: none;
     }
 
     .submenu-grid {

@@ -11,9 +11,14 @@
     },
     {
       id: "press",
-      title: "Press",
+      title: "Artist in Residence",
       text: [
-        "Press information will be added here later. This is placeholder content for now.",
+        "/// 2021-2028: Atelierstipendium Westbahnstraße des BMOEKS",
+        "/// 2022: Atelierstipendium des Landes OÖ in Český Krumlov, Tschechien",
+        "/// 2020: Atelierstipendium des Landes OÖ in Český Krumlov, Tschechien",
+        "/// 2019: Ankauf durch „DieKunstsammlung des Landes OÖ“",
+        "/// 2019: Atelieraufenthalt in Kopenhagen, Dänemark",
+        "/// 2014: Aquarellhappening in Tux, Tirol",
       ],
     },
     {
@@ -30,8 +35,12 @@
       id: `section-${index}`,
       title: section.title,
       text: section.text,
+      image: data.featuredImage || "",
     })),
-    ...dummySections,
+    ...dummySections.map((section) => ({
+      ...section,
+      image: data.featuredImage || "",
+    })),
   ];
 
   let activeSectionId = $state(aboutSections[0]?.id || "");
@@ -46,216 +55,154 @@
   }
 </script>
 
+<svelte:head>
+  <title>{data.pageTitle || "About"} | Eva Eichinger</title>
+</svelte:head>
+
 <main class="about-page">
-  <section class="about-feature" aria-label="About Eva Eichinger">
-    <aside class="about-list-column" aria-label="About sections">
-      <div class="about-heading">
-        <h1 class="about-label">{data.pageTitle}</h1>
-      </div>
-
-      {#if data.featuredImage}
-        <img
-          class="about-left-image"
-          src={data.featuredImage}
-          alt={data.pageTitle}
-        />
-      {/if}
-
-      <div class="about-scroll-area">
-        <div class="about-links">
-          {#each aboutSections as section}
-            <button
-              type="button"
-              class="about-button"
-              class:active={activeSectionId === section.id}
-              onclick={() => selectSection(section.id)}
-            >
-              {@html section.title}
-            </button>
-          {/each}
-        </div>
-      </div>
-    </aside>
-
-    <div class="about-content-column">
-      {#if activeSection}
-        <div class="about-panel">
-          <h2>{@html activeSection.title}</h2>
+  <section class="about-layout" aria-label="About Eva Eichinger">
+    <aside class="about-left">
+      <div class="about-text-block">
+        {#if activeSection}
+          <h1>{@html activeSection.title}</h1>
 
           <div class="about-section-text">
             {#each activeSection.text as paragraph}
               <p>{@html paragraph}</p>
             {/each}
           </div>
+        {/if}
+      </div>
+
+      <div class="about-links">
+        {#each aboutSections as section}
+          <button
+            type="button"
+            class="about-link"
+            class:active={activeSectionId === section.id}
+            onmouseenter={() => selectSection(section.id)}
+            onfocus={() => selectSection(section.id)}
+            onclick={() => selectSection(section.id)}
+          >
+            {@html section.title}
+          </button>
+        {/each}
+      </div>
+    </aside>
+
+    <section class="about-right" aria-label="About image and navigation">
+      {#if activeSection?.image || data.featuredImage}
+        <div class="about-image-frame">
+          <img
+            src={activeSection?.image || data.featuredImage}
+            alt={data.pageTitle || "Eva Eichinger"}
+          />
         </div>
       {/if}
-    </div>
+
+      <nav class="about-bottom-nav" aria-label="Page navigation">
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/painting">Paintings</a>
+        <a href="/exhibitions">Exhibitions</a>
+        <a href="/archive">Archive</a>
+        <a href="/contact">Contact</a>
+      </nav>
+
+      <div class="about-socials">
+        <a href="https://www.instagram.com" target="_blank" rel="noreferrer">
+          Instagram
+        </a>
+
+        <a href="https://www.linkedin.com" target="_blank" rel="noreferrer">
+          Linkedin
+        </a>
+      </div>
+
+      <a class="about-email" href="mailto:info@evaeichinger.com">
+        info@evaeichinger.com
+      </a>
+    </section>
   </section>
 </main>
 
 <style>
   :global(body) {
     margin: 0;
-    overflow-x: hidden;
-    font-family: Georgia, "Times New Roman", serif;
+    overflow: hidden;
+    font-family: Arial, Helvetica, sans-serif;
     background: #ffffff;
-    color: #4d4a47;
+    color: #000000;
+  }
+
+  :global(*) {
+    box-sizing: border-box;
   }
 
   .about-page {
     width: 100%;
+    height: 100vh;
     min-height: 100vh;
-    padding: 116px clamp(28px, 5vw, 72px) 92px;
-    box-sizing: border-box;
+    padding: 96px 96px 38px 28px;
+    overflow: hidden;
     background: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
 
-  .about-feature {
+  .about-layout {
     width: 100%;
-    max-width: 1500px;
+    height: calc(100vh - 150px);
+    min-height: 0;
     display: grid;
-    grid-template-columns: 20% minmax(0, 80%);
-    gap: clamp(14px, 2vw, 32px);
-    align-items: center;
-    background: #ffffff;
+    grid-template-columns: 36% minmax(0, 64%);
+    gap: 18px;
+    align-items: stretch;
+    overflow: hidden;
   }
 
-  .about-list-column {
+  .about-left {
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    padding-right: 10px;
+    overflow: hidden;
+  }
+
+  .about-text-block {
     width: 100%;
-    height: min(76vh, 820px);
-    justify-self: start;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .about-heading {
-    margin-bottom: 24px;
-  }
-
-  .about-label {
-    margin: 0;
-    color: #3f3c39;
-    font-size: 15px;
-    font-weight: 300;
-    line-height: 1.15;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .about-left-image {
-    width: 100%;
-    max-width: 180px;
-    height: auto;
-    display: block;
-    margin: 0 0 34px;
-    object-fit: cover;
-    object-position: center;
-  }
-
-  .about-scroll-area {
+    max-width: 430px;
     min-height: 0;
     overflow-y: auto;
-    padding-right: 4px;
+    padding-top: 2px;
+    padding-bottom: 24px;
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
 
-  .about-scroll-area::-webkit-scrollbar {
+  .about-text-block::-webkit-scrollbar {
     display: none;
   }
 
-  .about-links {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .about-button {
-    width: fit-content;
-    max-width: 100%;
-    display: inline-block;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: #77716d;
-    font-family: inherit;
+  .about-text-block h1 {
+    margin: 0 0 8px;
+    color: #000000;
+    font-family: Arial, Helvetica, sans-serif;
     font-size: 15px;
-    font-weight: 300;
-    line-height: 1.25;
-    letter-spacing: 0.08em;
-    text-align: left;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition:
-      color 0.35s ease,
-      opacity 0.35s ease;
-  }
-
-  .about-button::after {
-    content: "";
-    display: block;
-    width: 0;
-    height: 1px;
-    margin-top: 5px;
-    background: currentColor;
-    transition: width 0.5s ease;
-  }
-
-  .about-button:hover,
-  .about-button:focus,
-  .about-button.active {
-    color: #1f1f1f;
-  }
-
-  .about-button:hover::after,
-  .about-button:focus::after,
-  .about-button.active::after {
-    width: 100%;
-  }
-
-  .about-content-column {
-    width: 100%;
-    min-width: 0;
-    height: min(76vh, 820px);
-    overflow-y: auto;
-    overflow-x: hidden;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  .about-content-column::-webkit-scrollbar {
-    display: none;
-  }
-
-  .about-panel {
-    width: 100%;
-    animation: contentReveal 0.65s ease both;
-  }
-
-  .about-panel h2 {
-    margin: 0 0 34px;
-    color: #2f2d2b;
-    font-size: 22px;
-    font-weight: 300;
-    line-height: 1.3;
-    letter-spacing: 0.08em;
+    font-weight: 900;
+    line-height: 1;
     text-transform: uppercase;
   }
 
   .about-section-text {
-    width: 100%;
+    max-width: 420px;
   }
 
   .about-section-text p {
-    margin: 0 0 22px;
-    color: #7f7974;
+    margin: 0 0 14px;
+    color: #000000;
     font-size: 15px;
-    font-weight: 300;
-    line-height: 1.75;
-    letter-spacing: 0.02em;
+    font-weight: 400;
+    line-height: 1.25;
   }
 
   :global(.about-section-text a) {
@@ -265,143 +212,226 @@
     text-underline-offset: 4px;
   }
 
-  :global(.about-section-text a:hover) {
-    color: #4d4a47;
+  .about-links {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding-bottom: 0;
   }
 
-  @keyframes contentReveal {
-    from {
-      opacity: 0;
-      transform: scale(1.015);
-      filter: blur(4px);
-    }
-
-    to {
-      opacity: 1;
-      transform: scale(1);
-      filter: blur(0);
-    }
+  .about-link {
+    width: fit-content;
+    max-width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #000000;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1;
+    text-align: left;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.25s ease;
   }
 
-  @media (max-width: 900px) {
+  .about-link:hover,
+  .about-link:focus,
+  .about-link.active {
+    opacity: 0.55;
+  }
+
+  .about-right {
+    position: relative;
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 105px 210px;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 0 16px;
+    align-items: end;
+    overflow: hidden;
+  }
+  .about-image-frame {
+    grid-column: 1 / 2;
+    grid-row: 1 / 3;
+    width: 100%;
+    height: calc(100% - 26px);
+    min-height: 0;
+    align-self: start;
+    overflow: hidden;
+    background: #eeeeee;
+  }
+
+  .about-image-frame img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    object-position: left;
+  }
+
+  .about-bottom-nav {
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0;
+  }
+
+  .about-bottom-nav a,
+  .about-socials a,
+  .about-email {
+    width: fit-content;
+    color: #000000;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 0.9;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: opacity 0.25s ease;
+  }
+
+  .about-bottom-nav a:hover,
+  .about-socials a:hover,
+  .about-email:hover {
+    opacity: 0.55;
+  }
+
+  .about-socials {
+    grid-column: 2 / 3;
+    grid-row: 2 / 3;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    justify-self: start;
+  }
+
+  .about-email {
+    grid-column: 3 / 4;
+    grid-row: 2 / 3;
+    align-self: end;
+    justify-self: start;
+    max-width: 210px;
+    overflow-wrap: normal;
+    white-space: nowrap;
+    text-transform: none;
+
+    transform: translateY(-10px);
+  }
+
+  @media (max-width: 1280px) {
     .about-page {
-      padding: 120px 40px 92px;
+      padding-right: 82px;
     }
 
-    .about-feature {
-      grid-template-columns: 220px minmax(0, 1fr);
-      gap: 34px;
+    .about-layout {
+      grid-template-columns: 45% minmax(0, 55%);
+      gap: 24px;
     }
 
-    .about-list-column {
-      max-width: 220px;
-      height: min(62vh, 620px);
+    .about-right {
+      grid-template-columns: minmax(0, 1fr) 96px 128px;
+      gap: 0 14px;
     }
 
-    .about-left-image {
-      max-width: 160px;
+    .about-email {
+      max-width: 128px;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    :global(body) {
+      overflow-y: auto;
     }
 
-    .about-content-column {
-      height: min(76vh, 760px);
+    .about-page {
+      height: auto;
+      min-height: 100vh;
+      padding: 118px 24px 110px;
+      overflow: visible;
+    }
+
+    .about-layout {
+      display: block;
+      height: auto;
+      min-height: auto;
+      overflow: visible;
+    }
+
+    .about-left {
+      height: auto;
+      min-height: auto;
+      display: block;
+      padding-right: 0;
+      margin-bottom: 34px;
+      overflow: visible;
+    }
+
+    .about-text-block {
+      max-width: 620px;
+      overflow: visible;
+      padding-top: 0;
+      padding-bottom: 0;
+      margin-bottom: 32px;
+    }
+
+    .about-links {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 18px 28px;
+      padding-bottom: 0;
+    }
+
+    .about-right {
+      height: auto;
+      min-height: auto;
+      display: block;
+      overflow: visible;
+    }
+
+    .about-image-frame {
+      width: 100%;
+      height: 62vh;
+      min-height: 0;
+      margin-bottom: 22px;
+    }
+
+    .about-bottom-nav,
+    .about-socials {
+      margin-bottom: 18px;
+    }
+
+    .about-email {
+      max-width: none;
+      overflow-wrap: normal;
+    }
+
+    .about-bottom-nav a,
+    .about-socials a,
+    .about-email {
+      font-size: 14px;
     }
   }
 
   @media (max-width: 700px) {
-    :global(body) {
-      overflow: hidden;
-    }
-
     .about-page {
-      height: 100dvh;
-      min-height: 100dvh;
-      padding: 118px 24px 0;
-      align-items: stretch;
-      overflow: hidden;
+      padding: 108px 24px 120px;
     }
 
-    .about-feature {
-      width: 100%;
-      height: calc(100dvh - 118px);
-      display: grid;
-      grid-template-columns: 1fr;
-      grid-template-rows: auto minmax(0, 1fr);
-      gap: 24px;
-      align-items: stretch;
-      overflow-x: visible;
-      overflow-y: hidden;
-    }
-
-    .about-list-column {
-      order: 1;
-      max-width: none;
-      height: auto;
-      overflow: visible;
-    }
-
-    .about-heading {
-      margin-bottom: 18px;
-    }
-
-    .about-label {
-      font-size: 18px;
-    }
-
-    .about-left-image {
-      max-width: 120px;
-      margin-bottom: 18px;
-    }
-
-    .about-scroll-area {
-      width: calc(100vw - 48px);
-      max-width: calc(100vw - 48px);
-      overflow-x: auto;
-      overflow-y: hidden;
-      padding-right: 0;
-      padding-bottom: 10px;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-      -webkit-overflow-scrolling: touch;
-      touch-action: pan-x;
-    }
-
-    .about-scroll-area::-webkit-scrollbar {
-      display: none;
-    }
-
-    .about-links {
-      width: max-content;
-      min-width: max-content;
-      display: flex;
-      flex-direction: row;
-      flex-wrap: nowrap;
-      gap: 28px;
-      padding-bottom: 4px;
-    }
-
-    .about-button {
-      flex: 0 0 auto;
-      width: auto;
-      max-width: none;
+    .about-text-block h1,
+    .about-section-text p,
+    .about-link {
       font-size: 14px;
-      white-space: nowrap;
     }
 
-    .about-content-column {
-      order: 2;
-      height: 100%;
-      padding-bottom: 130px;
-      box-sizing: border-box;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .about-panel h2 {
-      font-size: 20px;
-    }
-
-    .about-section-text p {
-      font-size: 14px;
-      line-height: 1.7;
+    .about-image-frame {
+      height: 52vh;
     }
   }
 </style>

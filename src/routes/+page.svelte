@@ -1,177 +1,104 @@
 <script>
-  import { tick } from "svelte";
-
   let { data } = $props();
 
-  let selectedWorkId = $state(null);
-  let currentSlideIndex = $state(0);
-  let mobileThumbnailStrip = $state(null);
+  let activeCategory = $state("ALL WORK");
+  let hoveredWorkId = $state(null);
 
-  let swipeStartX = $state(0);
-  let swipeEndX = $state(0);
-  let wasSwiping = $state(false);
+  let allWorks = $derived(data.works || []);
 
-  let worksByGroup = $derived(
-    data.works?.reduce((groups, work) => {
-      const group = work.group || "Works";
+  function cleanHtml(value) {
+    return value || "";
+  }
 
-      if (!groups[group]) {
-        groups[group] = [];
-      }
+  function getRawCategories(work) {
+    const possibleCategories =
+      work.categories ||
+      work.category ||
+      work.parentCategories ||
+      work.projectCategories ||
+      work.workCategories ||
+      [];
 
-      if (groups[group].length < 4) {
-        groups[group].push(work);
-      }
+    if (!Array.isArray(possibleCategories)) {
+      return [];
+    }
 
-      return groups;
-    }, {}) || {},
-  );
+    return possibleCategories;
+  }
 
-  let sortedWorksByGroup = $derived(
-    Object.entries(worksByGroup).sort(([groupA], [groupB]) => {
-      if (groupA === "Exhibitions") return 1;
-      if (groupB === "Exhibitions") return -1;
+  function getParentCategories(work) {
+    return getRawCategories(work)
+      .filter((category) => {
+        if (!category) return false;
 
-      const numberA = Number(groupA);
-      const numberB = Number(groupB);
+        if (category.parent === 0 || category.parent === null) return true;
+        if (category.parentId === 0 || category.parentId === null) return true;
+        if (category.parent === undefined && category.parentId === undefined)
+          return true;
 
-      if (!Number.isNaN(numberA) && !Number.isNaN(numberB)) {
-        return numberB - numberA;
-      }
+        return false;
+      })
+      .map((category) => ({
+        name: category.name || category.title || category.slug || "",
+        slug: category.slug || category.name || category.title || "",
+      }))
+      .filter((category) => category.name);
+  }
 
-      return groupA.localeCompare(groupB);
-    }),
-  );
+  function getWorkCategoryNames(work) {
+    const parentCategories = getParentCategories(work);
 
-  let displayWorksByGroup = $derived(() => {
-    const paintings = [];
-    const exhibitions = [];
+    if (parentCategories.length > 0) {
+      return parentCategories.map((category) => category.name.toUpperCase());
+    }
 
-    sortedWorksByGroup.forEach(([group, works]) => {
-      if (group === "Exhibitions") {
-        exhibitions.push(...works);
-      } else {
-        paintings.push(...works);
+    if (work.group) {
+      return [work.group.toUpperCase()];
+    }
+
+    return [];
+  }
+
+  let categories = $derived(() => {
+    const found = new Map();
+
+    allWorks.forEach((work) => {
+      const parentCategories = getParentCategories(work);
+
+      parentCategories.forEach((category) => {
+        found.set(category.name.toUpperCase(), category.name.toUpperCase());
+      });
+
+      if (parentCategories.length === 0 && work.group) {
+        found.set(work.group.toUpperCase(), work.group.toUpperCase());
       }
     });
 
-    const groups = [];
-
-    if (paintings.length > 0) {
-      groups.push(["PAINTINGS", paintings]);
-    }
-
-    if (exhibitions.length > 0) {
-      groups.push(["Exhibitions", exhibitions]);
-    }
-
-    return groups;
+    return ["ALL WORK", ...Array.from(found.values())];
   });
 
-  let mobileWorks = $derived(
-    displayWorksByGroup().flatMap(([group, works]) =>
-      works.map((work) => ({
-        ...work,
-        displayGroup: group,
-      })),
-    ),
-  );
+  let filteredWorks = $derived(() => {
+    if (activeCategory === "ALL WORK") {
+      return allWorks;
+    }
 
-  let selectedWork = $derived(
-    data.works?.find((work) => work.id === selectedWorkId) ||
-      displayWorksByGroup()?.[0]?.[1]?.[0],
-  );
-
-  let currentMobileWork = $derived(
-    mobileWorks[currentSlideIndex] || selectedWork || mobileWorks[0],
-  );
-
-  async function scrollActiveMobileThumb() {
-    await tick();
-
-    if (!mobileThumbnailStrip) return;
-
-    const activeThumb = mobileThumbnailStrip.querySelector(
-      ".mobile-thumb.active",
+    return allWorks.filter((work) =>
+      getWorkCategoryNames(work).includes(activeCategory),
     );
+  });
 
-    if (!activeThumb) return;
+  let activeWork = $derived(
+    filteredWorks().find((work) => work.id === hoveredWorkId) ||
+      filteredWorks()[0],
+  );
 
-    activeThumb.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest",
-      inline: "center",
-    });
+  function setCategory(category) {
+    activeCategory = category;
+    hoveredWorkId = null;
   }
 
-  function selectWork(work) {
-    selectedWorkId = work.id;
-
-    const index = mobileWorks.findIndex((item) => item.id === work.id);
-
-    if (index >= 0) {
-      currentSlideIndex = index;
-      scrollActiveMobileThumb();
-    }
-  }
-
-  function selectMobileWork(index) {
-    currentSlideIndex = index;
-    selectedWorkId = mobileWorks[index]?.id || null;
-    scrollActiveMobileThumb();
-  }
-
-  function previousSlide() {
-    if (!mobileWorks.length) return;
-
-    currentSlideIndex =
-      currentSlideIndex === 0 ? mobileWorks.length - 1 : currentSlideIndex - 1;
-
-    selectedWorkId = mobileWorks[currentSlideIndex]?.id || null;
-    scrollActiveMobileThumb();
-  }
-
-  function nextSlide() {
-    if (!mobileWorks.length) return;
-
-    currentSlideIndex =
-      currentSlideIndex === mobileWorks.length - 1 ? 0 : currentSlideIndex + 1;
-
-    selectedWorkId = mobileWorks[currentSlideIndex]?.id || null;
-    scrollActiveMobileThumb();
-  }
-
-  function handleSwipeStart(event) {
-    swipeStartX = event.touches?.[0]?.clientX || event.clientX;
-    swipeEndX = swipeStartX;
-    wasSwiping = false;
-  }
-
-  function handleSwipeMove(event) {
-    swipeEndX = event.touches?.[0]?.clientX || event.clientX;
-
-    if (Math.abs(swipeStartX - swipeEndX) > 10) {
-      wasSwiping = true;
-    }
-  }
-
-  function handleSwipeEnd() {
-    const swipeDistance = swipeStartX - swipeEndX;
-
-    if (Math.abs(swipeDistance) < 50) return;
-
-    if (swipeDistance > 0) {
-      nextSlide();
-    } else {
-      previousSlide();
-    }
-  }
-
-  function handleMobileImageClick(event) {
-    if (wasSwiping) {
-      event.preventDefault();
-      wasSwiping = false;
-    }
+  function setHoveredWork(work) {
+    hoveredWorkId = work.id;
   }
 </script>
 
@@ -185,650 +112,489 @@
 
   <meta name="robots" content="index, follow" />
 
-  <meta
-    property="og:title"
-    content="Project Eva | Contemporary Artist Portfolio"
-  />
-
-  <meta
-    property="og:description"
-    content="Explore selected works and exhibitions from Project Eva."
-  />
-
-  <meta property="og:type" content="website" />
-
-  {#if selectedWork?.featuredImage}
-    <meta property="og:image" content={selectedWork.featuredImage} />
+  {#if activeWork?.featuredImage}
+    <meta property="og:image" content={activeWork.featuredImage} />
   {/if}
 </svelte:head>
 
-<main class="home-page">
-  <section class="homepage-intro" aria-label="Homepage introduction">
-    <p>Selected Works</p>
-    <h1>Project Eva</h1>
-  </section>
-
-  {#if data.works && data.works.length > 0}
-    <section class="works-feature" aria-label="Selected works">
-      <aside class="works-list-column" aria-label="Works list">
-        <div class="works-heading">
-          <h2 class="works-label">SELECTED WORKS</h2>
-        </div>
-
-        <div class="works-scroll-area">
-          {#each displayWorksByGroup() as [groupTitle, works]}
-            <section
-              class="works-year-group"
-              aria-labelledby={`works-group-${groupTitle}`}
-            >
-              <h3 class="works-year" id={`works-group-${groupTitle}`}>
-                {groupTitle}
-              </h3>
-
-              <div class="works-links">
-                {#each works as work}
-                  <div class="work-item">
-                    <a
-                      href={work.frontendLink}
-                      class="desktop-work-link"
-                      class:active={selectedWork?.id === work.id}
-                      onmouseenter={() => selectWork(work)}
-                      onfocus={() => selectWork(work)}
-                      aria-label={`Open ${work.title}`}
-                    >
-                      {#if work.featuredImage}
-                        <img
-                          src={work.featuredImage}
-                          alt=""
-                          class="desktop-thumbnail"
-                          loading="lazy"
-                        />
-                      {/if}
-
-                      <h4>{work.title}</h4>
-                    </a>
-                  </div>
-                {/each}
-              </div>
-            </section>
-          {/each}
-        </div>
-      </aside>
-
-      <div class="works-image-column">
-        <div class="image-frame">
-          {#if selectedWork?.featuredImage}
-            {#key selectedWork.id}
-              <img
-                src={selectedWork.featuredImage}
-                alt={selectedWork.title}
-                class="featured-image"
-              />
-            {/key}
-          {/if}
-        </div>
-      </div>
-
-      <section class="mobile-slider" aria-label="Mobile works slider">
-        <p class="mobile-rabbit-text">
-          "When going down the rabbit hole, prepare to chill with lions." — Eva
-        </p>
-
-        <div class="mobile-top-controls">
+<main class="work-page">
+  <section class="work-layout" aria-label="Selected works">
+    <aside class="left-column" aria-label="Project information">
+      <div class="work-filter" aria-label="Work categories">
+        {#each categories() as category}
           <button
             type="button"
-            onclick={previousSlide}
-            aria-label="Previous work"
+            class:active={activeCategory === category}
+            onclick={() => setCategory(category)}
           >
-            ←
+            {category}
           </button>
+        {/each}
+      </div>
 
-          <button type="button" onclick={nextSlide} aria-label="Next work">
-            →
-          </button>
-        </div>
+      {#if activeWork}
+        <div class="project-preview">
+          <h1>{activeWork.title}</h1>
 
-        {#if currentMobileWork}
-          <h2 class="mobile-current-title">{currentMobileWork.title}</h2>
-        {/if}
+          <div class="project-preview-bottom">
+            <div class="project-preview-info">
+              <strong>{getWorkCategoryNames(activeWork)[0] || "PROJECT"}</strong
+              >
 
-        <div
-          class="mobile-image-frame"
-          role="region"
-          aria-label="Swipe image slider"
-          ontouchstart={handleSwipeStart}
-          ontouchmove={handleSwipeMove}
-          ontouchend={handleSwipeEnd}
-          onpointerdown={handleSwipeStart}
-          onpointermove={handleSwipeMove}
-          onpointerup={handleSwipeEnd}
-        >
-          {#if currentMobileWork}
-            <a
-              href={currentMobileWork.frontendLink}
-              class="mobile-image-link"
-              aria-label={`Open ${currentMobileWork.title}`}
-              onclick={handleMobileImageClick}
-            >
-              {#if currentMobileWork.featuredImage}
-                {#key currentMobileWork.id}
-                  <img
-                    src={currentMobileWork.featuredImage}
-                    alt={currentMobileWork.title}
-                    class="mobile-main-image"
-                  />
-                {/key}
+              {#if activeWork.excerpt}
+                <p>{@html cleanHtml(activeWork.excerpt)}</p>
+              {:else if activeWork.description}
+                <p>{@html cleanHtml(activeWork.description)}</p>
+              {:else}
+                <p>{activeWork.title} is part of the selected works archive.</p>
               {/if}
-            </a>
-          {/if}
+            </div>
+
+            <div class="case-count">
+              CASE STUDIES({filteredWorks().length})
+            </div>
+          </div>
         </div>
-        <div
-          class="mobile-thumbnail-strip"
-          bind:this={mobileThumbnailStrip}
-          aria-label="Slider thumbnails"
-        >
-          {#each mobileWorks as work, index}
-            <button
-              type="button"
-              class="mobile-thumb"
-              class:active={index === currentSlideIndex}
-              onclick={() => selectMobileWork(index)}
-              aria-label={`Preview ${work.title}`}
-            >
-              {#if work.featuredImage}
-                <img src={work.featuredImage} alt="" loading="lazy" />
-              {/if}
-            </button>
-          {/each}
-        </div>
+      {/if}
+    </aside>
+
+    {#if filteredWorks().length > 0}
+      <section class="work-grid" aria-label="Work gallery">
+        {#each filteredWorks() as work, index}
+          <a
+            href={work.frontendLink}
+            class="work-card"
+            class:active={activeWork?.id === work.id}
+            onmouseenter={() => setHoveredWork(work)}
+            onfocus={() => setHoveredWork(work)}
+          >
+            {#if work.featuredImage}
+              <figure>
+                <img
+                  src={work.featuredImage}
+                  alt={work.title}
+                  loading={index < 4 ? "eager" : "lazy"}
+                />
+              </figure>
+            {/if}
+
+            <span class="work-number">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+          </a>
+        {/each}
       </section>
-    </section>
-  {:else}
-    <p class="empty-message">No works found.</p>
-  {/if}
+    {:else}
+      <p class="empty-message">No works found.</p>
+    {/if}
+  </section>
 </main>
 
 <style>
   :global(body) {
     margin: 0;
     overflow-x: hidden;
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: Arial, Helvetica, sans-serif;
     background: #ffffff;
-    color: #4d4a47;
+    color: #000000;
   }
 
-  .home-page {
+  :global(*) {
+    box-sizing: border-box;
+  }
+
+  .work-page {
     width: 100%;
     min-height: 100vh;
-    padding: 116px clamp(28px, 5vw, 72px) 92px;
-    box-sizing: border-box;
+    padding: 96px 90px 90px 28px;
     background: #ffffff;
+  }
+
+  .work-layout {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 19% 81%;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .left-column {
+    position: sticky;
+    top: 96px;
+    height: calc(100vh - 186px);
+    min-height: 620px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .work-filter {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+  }
+
+  .work-filter button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #bdbdbd;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 15px;
+    font-weight: 900;
+    line-height: 1.08;
+    text-align: left;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .work-filter button.active,
+  .work-filter button:hover {
+    color: #000000;
+  }
+
+  .project-preview {
+    width: 100%;
+  }
+
+  .project-preview h1 {
+    max-width: 340px;
+    margin: 0 0 46px;
+    color: #000000;
+    font-size: clamp(27px, 2.55vw, 45px);
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -0.055em;
+  }
+
+  .project-preview-bottom {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    align-items: start;
+  }
+
+  .project-preview-info {
+    max-width: 330px;
+  }
+
+  .project-preview-info strong {
+    display: block;
+    margin: 0 0 8px;
+    color: #000000;
+    font-size: 14px;
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .project-preview-info p {
+    margin: 0;
+    color: #000000;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.2;
+  }
+
+  .project-preview-info :global(p) {
+    margin: 0;
+  }
+
+  .case-count {
+    color: #000000;
+    font-size: 14px;
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .work-grid {
+    width: calc(100% + 10px);
+    margin-left: -10px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 12px;
+    row-gap: 12px;
+    padding: 0 0 68px;
+  }
+
+  .work-card {
+    position: relative;
+    display: block;
+    min-height: 560px;
+    overflow: hidden;
+    color: #000000;
+    background: #eeeeee;
+    text-decoration: none;
+  }
+
+  .work-card figure {
+    width: 100%;
+    height: 100%;
+    margin: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    background: #eeeeee;
   }
 
-  .homepage-intro {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-
-  .homepage-intro p,
-  .homepage-intro h1 {
-    margin: 0;
-  }
-
-  .works-feature {
+  .work-card img {
     width: 100%;
-    max-width: 1500px;
-    display: grid;
-    grid-template-columns: 20% minmax(0, 80%);
-    gap: clamp(14px, 2vw, 32px);
-    align-items: center;
-    background: #ffffff;
-  }
-
-  .works-list-column {
-    width: 100%;
-    height: min(76vh, 820px);
-    background: #ffffff;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .works-heading {
-    margin-bottom: 34px;
-  }
-
-  .works-label {
-    margin: 0;
-    color: #3f3c39;
-    font-size: 15px;
-    font-weight: 300;
-    line-height: 1.15;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .works-scroll-area {
-    min-height: 0;
-    overflow-y: auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  .works-scroll-area::-webkit-scrollbar {
-    display: none;
-  }
-
-  .works-year-group {
-    padding: 0;
-    margin-bottom: 30px;
-  }
-
-  .works-year-group:last-child {
-    margin-bottom: 0;
-  }
-
-  .works-year {
-    margin: 0 0 15px;
-    color: #aaa39d;
-    font-size: 10px;
-    font-weight: 400;
-    line-height: 1;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-  }
-
-  .works-links {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .work-item {
-    width: 100%;
-  }
-
-  .desktop-work-link {
-    width: fit-content;
-    max-width: 100%;
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    color: #77716d;
-    text-decoration: none;
-    transition:
-      color 0.35s ease,
-      opacity 0.35s ease;
-  }
-
-  .desktop-thumbnail {
-    width: 24px;
-    height: 24px;
-    flex-shrink: 0;
+    height: 100%;
+    min-height: 560px;
     display: block;
     object-fit: cover;
     object-position: center;
-    opacity: 0.7;
     transition:
       opacity 0.35s ease,
-      transform 0.35s ease;
+      width 0.55s ease,
+      height 0.55s ease,
+      transform 0.55s ease,
+      filter 0.55s ease;
   }
 
-  .desktop-work-link:hover .desktop-thumbnail,
-  .desktop-work-link:focus .desktop-thumbnail,
-  .desktop-work-link.active .desktop-thumbnail {
+  .work-grid:hover .work-card img {
+    opacity: 0.12;
+    filter: grayscale(10%);
+  }
+
+  .work-grid:hover .work-card:hover img,
+  .work-grid:hover .work-card.active img {
+    width: 92%;
+    height: 92%;
+    min-height: 0;
     opacity: 1;
-    transform: scale(1.06);
-  }
-
-  .desktop-work-link h4 {
-    display: inline-block;
-    position: relative;
-    margin: 0;
-    font-size: 14px;
-    font-weight: 300;
-    line-height: 1.35;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .desktop-work-link h4::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: -4px;
-    width: 0;
-    height: 1px;
-    background: currentColor;
-    transition: width 0.5s ease;
-  }
-
-  .desktop-work-link:hover,
-  .desktop-work-link:focus,
-  .desktop-work-link.active {
-    color: #1f1f1f;
-  }
-
-  .desktop-work-link:hover h4::after,
-  .desktop-work-link:focus h4::after,
-  .desktop-work-link.active h4::after {
-    width: 100%;
-  }
-
-  .works-image-column {
-    width: 100%;
-    min-width: 0;
-    height: min(76vh, 820px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #ffffff;
-  }
-
-  .image-frame {
-    width: 100%;
-    height: 100%;
-    aspect-ratio: 16 / 10;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #ffffff;
-  }
-
-  .featured-image {
-    width: 100%;
-    height: 100%;
-    display: block;
     object-fit: contain;
-    object-position: center;
-    animation: imageReveal 0.85s ease both;
+    transform: scale(1);
+    filter: none;
   }
 
-  .mobile-slider {
-    display: none;
+  .work-number {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 4;
+    color: #000000;
+    font-size: 14px;
+    font-weight: 900;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+
+  .work-card:hover .work-number,
+  .work-card.active .work-number {
+    opacity: 1;
   }
 
   .empty-message {
     margin: 0;
-    color: #6f6b68;
-    font-size: 14px;
+    padding: 120px 0;
+    font-size: 15px;
+    font-weight: 900;
+    text-transform: uppercase;
   }
 
-  @keyframes imageReveal {
-    from {
-      opacity: 0;
-      transform: scale(1.01);
-      filter: blur(3px);
+  @media (max-width: 1280px) {
+    .work-page {
+      padding: 96px 80px 90px 28px;
     }
 
-    to {
-      opacity: 1;
-      transform: scale(1);
-      filter: blur(0);
+    .work-layout {
+      grid-template-columns: 21% 79%;
+      gap: 24px;
+    }
+
+    .project-preview h1 {
+      font-size: clamp(26px, 2.4vw, 38px);
+    }
+
+    .work-card,
+    .work-card img {
+      min-height: 500px;
     }
   }
 
-  @media (min-width: 701px) and (max-width: 1024px) {
-    .home-page {
-      align-items: flex-start;
-      padding-top: 116px;
-    }
-
-    .works-feature {
-      grid-template-columns: 40% 60%;
-      align-items: flex-start;
-    }
-
-    .works-list-column,
-    .works-image-column {
-      height: 68vh;
-      max-height: 680px;
-    }
-
-    .works-list-column {
+  @media (max-width: 1024px) {
+    :global(body) {
       overflow: hidden;
     }
 
-    .works-scroll-area {
+    .work-page {
+      height: 100vh;
+      min-height: 100vh;
+      overflow: hidden;
+      padding: 118px 24px 0;
+    }
+
+    .work-layout {
+      display: block;
       height: 100%;
-      overflow-y: auto;
+      overflow: hidden;
     }
 
-    .works-image-column {
-      align-items: flex-start;
-      justify-content: center;
+    .left-column {
+      position: fixed;
+      top: 118px;
+      left: 24px;
+      right: 24px;
+      z-index: 10;
+      height: auto;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: start;
+      margin-bottom: 0;
+      background: #ffffff;
     }
 
-    .image-frame {
-      width: auto;
-      height: 100%;
-      aspect-ratio: 3 / 4;
-      align-items: flex-start;
-      justify-content: center;
+    .work-filter {
+      order: 2;
+      align-items: flex-end;
+      gap: 7px;
+      margin-bottom: 0;
+      text-align: right;
     }
 
-    .featured-image {
+    .work-filter button {
+      font-size: 14px;
+      text-align: right;
+    }
+
+    .project-preview {
+      order: 1;
+      max-width: 58vw;
+    }
+
+    .project-preview h1 {
+      max-width: 520px;
+      margin: 0 0 18px;
+      font-size: clamp(22px, 4.2vw, 34px);
+    }
+
+    .project-preview-bottom {
+      gap: 8px;
+    }
+
+    .project-preview-info {
+      max-width: 420px;
+    }
+
+    .work-grid {
       width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: top center;
+      height: calc(100vh - 118px);
+      margin-left: 0;
+      overflow-y: auto;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      padding: 240px 0 40px;
+    }
+
+    .work-card,
+    .work-card img {
+      min-height: 440px;
+    }
+
+    .work-grid:hover .work-card:hover img,
+    .work-grid:hover .work-card.active img {
+      width: 92%;
+      height: 92%;
+      min-height: 0;
+      object-fit: contain;
     }
   }
 
   @media (max-width: 700px) {
-    :global(body) {
-      overflow-x: hidden;
-      overflow-y: auto;
-      background: #ffffff;
-    }
-
-    .home-page {
-      width: 100%;
-      min-height: auto;
-      padding: 80px 22px 0;
-      display: block;
-      overflow: visible;
-      background: #ffffff;
-    }
-
-    .works-feature {
-      width: 100%;
-      max-width: none;
-      display: block;
-      overflow: visible;
-      background: #ffffff;
-    }
-
-    .works-list-column,
-    .works-image-column {
-      display: none;
-    }
-
-    .mobile-slider {
-      --mobile-space: 10px;
-      --thumb-gap: 4px;
-      --thumb-size: calc((100vw - 14px - (7 * var(--thumb-gap))) / 8);
-
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: var(--mobile-space);
-      overflow: visible;
-      background: #ffffff;
-    }
-
-    .mobile-rabbit-text {
-      display: block;
-      margin-bottom: 2px;
-      color: #2f2d2b;
-      font-size: 16px;
-      font-weight: 400;
-      line-height: 1.2;
-      letter-spacing: 0.02em;
-      text-align: left;
-      background: #ffffff;
-      text-transform: uppercase;
-    }
-
-    .mobile-current-title {
-      display: block;
-      margin: 0;
-      color: #2f2d2b;
-      font-size: 14px;
-      font-weight: 300;
-      line-height: 1.2;
-      letter-spacing: 0.08em;
-      text-align: left;
-      text-transform: uppercase;
-      background: #ffffff;
-    }
-
-    .mobile-top-controls {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 22px;
-      margin: 0;
-      padding: 0;
-      background: #ffffff;
-    }
-
-    .mobile-top-controls button {
-      width: auto;
-      height: auto;
-      padding: 0;
-      border: 0;
-      background: transparent;
-      color: #2f2d2b;
-      font-family: inherit;
-      font-size: 36px;
-      line-height: 1;
-      cursor: pointer;
-      appearance: none;
-    }
-
-    .mobile-image-frame {
-      width: 100%;
-      height: clamp(300px, 48vh, 370px);
+    .work-page {
+      height: 100vh;
+      min-height: 100vh;
       overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #ffffff;
-      touch-action: pan-y;
-      user-select: none;
+      padding: 108px 16px 0;
     }
 
-    .mobile-image-link {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: inherit;
-      text-decoration: none;
-      background: #ffffff;
+    .left-column {
+      top: 108px;
+      left: 16px;
+      right: 16px;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
     }
 
-    .mobile-main-image {
-      width: 100%;
-      height: 100%;
-      display: block;
-      object-fit: cover;
-      object-position: center;
-      animation: imageReveal 0.7s ease both;
-      background: #ffffff;
-      pointer-events: none;
-      user-select: none;
+    .work-filter button {
+      font-size: 12px;
+      line-height: 1.08;
     }
 
-    .mobile-thumbnail-strip {
-      width: 100%;
-      height: var(--thumb-size);
-      display: flex;
-      gap: var(--thumb-gap);
-      overflow-x: auto;
-      overflow-y: hidden;
-      padding: 0;
-      background: #ffffff;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-      -webkit-overflow-scrolling: touch;
-      scroll-snap-type: x proximity;
-      scroll-behavior: smooth;
-      touch-action: pan-x;
+    .project-preview {
+      max-width: 56vw;
     }
 
-    .mobile-thumbnail-strip::-webkit-scrollbar {
-      display: none;
+    .project-preview h1 {
+      max-width: 100%;
+      margin: 0 0 14px;
+      font-size: clamp(18px, 5.4vw, 25px);
     }
 
-    .mobile-thumb {
-      width: var(--thumb-size);
-      height: var(--thumb-size);
-      flex: 0 0 var(--thumb-size);
-      aspect-ratio: 1 / 1;
-      padding: 0;
-      border: 0;
-      background: #ffffff;
-      opacity: 0.45;
-      cursor: pointer;
-      scroll-snap-align: center;
-      transition: opacity 0.3s ease;
+    .project-preview-info strong,
+    .project-preview-info p,
+    .case-count {
+      font-size: 12px;
     }
 
-    .mobile-thumb img {
-      width: 100%;
-      height: 100%;
-      display: block;
-      object-fit: cover;
-      object-position: center;
-      background: #ffffff;
+    .work-grid {
+      height: calc(100vh - 108px);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      padding: 220px 0 38px;
     }
 
-    .mobile-thumb.active {
+    .work-card,
+    .work-card img {
+      min-height: 260px;
+    }
+
+    .work-grid:hover .work-card img {
       opacity: 1;
+      filter: none;
+    }
+
+    .work-grid:hover .work-card:hover img,
+    .work-grid:hover .work-card.active img {
+      width: 100%;
+      height: 100%;
+      min-height: 260px;
+      object-fit: cover;
+    }
+
+    .work-number {
+      opacity: 1;
+      font-size: 12px;
     }
   }
 
   @media (max-width: 420px) {
-    .home-page {
-      padding: 80px 22px 0;
+    .project-preview {
+      max-width: 54vw;
     }
 
-    .mobile-slider {
-      --mobile-space: 10px;
-      --thumb-gap: 4px;
-      --thumb-size: calc((100vw - 14px - (7 * var(--thumb-gap))) / 8);
+    .project-preview h1 {
+      font-size: clamp(17px, 5vw, 22px);
     }
 
-    .mobile-image-frame {
-      height: clamp(280px, 46vh, 350px);
+    .work-grid {
+      padding-top: 210px;
     }
 
-    .mobile-current-title {
-      font-size: 13px;
+    .work-card,
+    .work-card img {
+      min-height: 220px;
     }
 
-    .mobile-rabbit-text {
-      display: block;
-      margin-bottom: 2px;
-      color: #2f2d2b;
-      font-size: 16px;
-      font-weight: 400;
-      line-height: 1.2;
-      letter-spacing: 0.02em;
-      text-align: left;
-      background: #ffffff;
-      text-transform: uppercase;
+    .work-grid:hover .work-card:hover img,
+    .work-grid:hover .work-card.active img {
+      min-height: 220px;
     }
   }
 </style>
