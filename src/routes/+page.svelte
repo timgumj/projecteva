@@ -414,6 +414,7 @@
   }
 
   .back-to-top {
+    display: none;
     grid-column: 1 / -1;
     justify-self: center;
     margin: 48px 0 0;
@@ -466,7 +467,9 @@
 
     .work-page {
       height: 100vh;
+      height: 100dvh;
       min-height: 100vh;
+      min-height: 100dvh;
       overflow: hidden;
       padding: 118px 24px 0;
     }
@@ -483,14 +486,14 @@
       top: auto;
       left: auto;
       right: auto;
-      z-index: 10;
+      z-index: 20;
       height: auto;
       min-height: 0;
       flex: 0 0 auto;
       display: block;
-      margin-bottom: 0;
+      margin: 0;
       padding-top: 86px;
-      padding-bottom: 16px;
+      padding-bottom: 22px;
       background: #ffffff;
     }
 
@@ -499,7 +502,7 @@
       top: 118px;
       left: 24px;
       right: 24px;
-      z-index: 30;
+      z-index: 40;
       width: auto;
       display: flex;
       flex-direction: column;
@@ -552,18 +555,20 @@
 
     .work-grid {
       width: 100%;
-      height: auto;
       min-height: 0;
       flex: 1 1 auto;
       margin-left: 0;
       overflow-y: auto;
       overflow-x: hidden;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-content: start;
+      gap: 12px;
+      padding: 0 0 calc(140px + env(safe-area-inset-bottom));
       scrollbar-width: none;
       scrollbar-color: transparent transparent;
       -ms-overflow-style: none;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      padding: 0 0 96px;
+      overscroll-behavior: contain;
     }
 
     .work-grid::-webkit-scrollbar {
@@ -595,22 +600,26 @@
     }
 
     .back-to-top {
-      margin: 40px 0 0;
-      padding-bottom: 32px;
+      display: block;
+      margin: 44px 0 0;
+      padding-bottom: calc(56px + env(safe-area-inset-bottom));
+      font-size: 14px;
     }
   }
 
   @media (max-width: 700px) {
     .work-page {
       height: 100vh;
+      height: 100dvh;
       min-height: 100vh;
+      min-height: 100dvh;
       overflow: hidden;
       padding: 108px 16px 0;
     }
 
     .left-column {
       padding-top: 76px;
-      padding-bottom: 14px;
+      padding-bottom: 20px;
     }
 
     .work-filter {
@@ -618,7 +627,7 @@
       top: 108px;
       left: 16px;
       right: 16px;
-      z-index: 30;
+      z-index: 40;
       width: auto;
       display: flex;
       flex-direction: column;
@@ -669,7 +678,7 @@
     .work-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
-      padding: 0 0 90px;
+      padding: 0 0 calc(130px + env(safe-area-inset-bottom));
       scrollbar-width: none;
       scrollbar-color: transparent transparent;
       -ms-overflow-style: none;
@@ -714,8 +723,9 @@
     }
 
     .back-to-top {
-      margin-top: 36px;
-      padding-bottom: 30px;
+      display: block;
+      margin-top: 38px;
+      padding-bottom: calc(56px + env(safe-area-inset-bottom));
       font-size: 12px;
     }
   }
@@ -723,6 +733,7 @@
   @media (max-width: 420px) {
     .left-column {
       padding-top: 72px;
+      padding-bottom: 18px;
     }
 
     .project-preview h1 {
