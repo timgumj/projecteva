@@ -151,7 +151,10 @@
 
       {#if activeWork}
         <div class="project-preview">
-          <h1>{activeWork.title}</h1>
+          <h1>
+            <span class="desktop-title">{activeWork.title}</span>
+            <span class="mobile-title">{activeCategory}</span>
+          </h1>
 
           <div class="project-preview-bottom">
             <div class="project-preview-info">
@@ -201,6 +204,10 @@
 
             <span class="work-number">
               {String(index + 1).padStart(2, "0")}
+            </span>
+
+            <span class="mobile-work-title">
+              {work.title}
             </span>
           </a>
         {/each}
@@ -291,6 +298,10 @@
     font-weight: 400;
     line-height: 1;
     letter-spacing: -0.055em;
+  }
+
+  .mobile-title {
+    display: none;
   }
 
   .project-preview-bottom {
@@ -408,6 +419,10 @@
     transition: opacity 0.25s ease;
   }
 
+  .mobile-work-title {
+    display: none;
+  }
+
   .work-card:hover .work-number,
   .work-card.active .work-number {
     opacity: 1;
@@ -493,7 +508,7 @@
       display: block;
       margin: 0;
       padding-top: 86px;
-      padding-bottom: 22px;
+      padding-bottom: 24px;
       background: #ffffff;
     }
 
@@ -537,19 +552,25 @@
       text-align: left;
     }
 
-    .project-preview-bottom {
-      gap: 8px;
-      text-align: left;
+    .desktop-title {
+      display: none;
+    }
+
+    .mobile-title {
+      display: inline;
     }
 
     .project-preview-info {
-      max-width: 420px;
+      display: none;
+    }
+
+    .project-preview-bottom {
+      gap: 0;
       text-align: left;
     }
 
-    .project-preview-info strong,
-    .project-preview-info p,
     .case-count {
+      font-size: 14px;
       text-align: left;
     }
 
@@ -564,7 +585,7 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       align-content: start;
       gap: 12px;
-      padding: 0 0 calc(140px + env(safe-area-inset-bottom));
+      padding: 0 0 calc(150px + env(safe-area-inset-bottom));
       scrollbar-width: none;
       scrollbar-color: transparent transparent;
       -ms-overflow-style: none;
@@ -591,19 +612,43 @@
       min-height: 440px;
     }
 
+    .work-grid:hover .work-card img {
+      opacity: 1;
+      filter: none;
+    }
+
     .work-grid:hover .work-card:hover img,
     .work-grid:hover .work-card.active img {
-      width: 92%;
-      height: 92%;
-      min-height: 0;
-      object-fit: contain;
+      width: 100%;
+      height: 100%;
+      min-height: 440px;
+      object-fit: cover;
+    }
+
+    .work-number {
+      opacity: 1;
+      font-size: 14px;
+    }
+
+    .mobile-work-title {
+      position: absolute;
+      top: 29px;
+      left: 10px;
+      right: 10px;
+      z-index: 4;
+      display: block;
+      color: #000000;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.08;
+      text-transform: uppercase;
     }
 
     .back-to-top {
       display: block;
       margin: 44px 0 0;
-      padding-bottom: calc(56px + env(safe-area-inset-bottom));
-      font-size: 15px;
+      padding-bottom: calc(64px + env(safe-area-inset-bottom));
+      font-size: 14px;
     }
   }
 
@@ -619,7 +664,7 @@
 
     .left-column {
       padding-top: 76px;
-      padding-bottom: 20px;
+      padding-bottom: 22px;
     }
 
     .work-filter {
@@ -663,13 +708,6 @@
       text-align: left;
     }
 
-    .project-preview-info {
-      max-width: 76%;
-      text-align: left;
-    }
-
-    .project-preview-info strong,
-    .project-preview-info p,
     .case-count {
       font-size: 12px;
       text-align: left;
@@ -678,7 +716,7 @@
     .work-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
-      padding: 0 0 calc(130px + env(safe-area-inset-bottom));
+      padding: 0 0 calc(145px + env(safe-area-inset-bottom));
       scrollbar-width: none;
       scrollbar-color: transparent transparent;
       -ms-overflow-style: none;
@@ -704,11 +742,6 @@
       min-height: 260px;
     }
 
-    .work-grid:hover .work-card img {
-      opacity: 1;
-      filter: none;
-    }
-
     .work-grid:hover .work-card:hover img,
     .work-grid:hover .work-card.active img {
       width: 100%;
@@ -722,10 +755,19 @@
       font-size: 12px;
     }
 
+    .mobile-work-title {
+      top: 27px;
+      left: 10px;
+      right: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.08;
+    }
+
     .back-to-top {
       display: block;
       margin-top: 38px;
-      padding-bottom: calc(56px + env(safe-area-inset-bottom));
+      padding-bottom: calc(64px + env(safe-area-inset-bottom));
       font-size: 12px;
     }
   }
@@ -733,15 +775,11 @@
   @media (max-width: 420px) {
     .left-column {
       padding-top: 72px;
-      padding-bottom: 18px;
+      padding-bottom: 20px;
     }
 
     .project-preview h1 {
       font-size: clamp(17px, 5vw, 22px);
-    }
-
-    .project-preview-info {
-      max-width: 82%;
     }
 
     .work-card,
