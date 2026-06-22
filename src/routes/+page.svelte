@@ -603,7 +603,7 @@
       display: block;
       margin: 44px 0 0;
       padding-bottom: calc(56px + env(safe-area-inset-bottom));
-      font-size: 14px;
+      font-size: 15px;
     }
   }
 
