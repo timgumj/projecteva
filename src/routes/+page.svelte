@@ -3,6 +3,7 @@
 
   let activeCategory = $state("ALL WORK");
   let hoveredWorkId = $state(null);
+  let workGridElement = $state(null);
 
   let allWorks = $derived(data.works || []);
 
@@ -95,10 +96,26 @@
   function setCategory(category) {
     activeCategory = category;
     hoveredWorkId = null;
+
+    if (workGridElement) {
+      workGridElement.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
   }
 
   function setHoveredWork(work) {
     hoveredWorkId = work.id;
+  }
+
+  function scrollBackToTop() {
+    if (workGridElement) {
+      workGridElement.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
   }
 </script>
 
@@ -159,7 +176,11 @@
     </aside>
 
     {#if filteredWorks().length > 0}
-      <section class="work-grid" aria-label="Work gallery">
+      <section
+        class="work-grid"
+        aria-label="Work gallery"
+        bind:this={workGridElement}
+      >
         {#each filteredWorks() as work, index}
           <a
             href={work.frontendLink}
@@ -183,6 +204,10 @@
             </span>
           </a>
         {/each}
+
+        <button type="button" class="back-to-top" onclick={scrollBackToTop}>
+          BACK TO TOP
+        </button>
       </section>
     {:else}
       <p class="empty-message">No works found.</p>
@@ -388,6 +413,22 @@
     opacity: 1;
   }
 
+  .back-to-top {
+    grid-column: 1 / -1;
+    justify-self: center;
+    margin: 48px 0 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #000000;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
   .empty-message {
     margin: 0;
     padding: 120px 0;
@@ -442,16 +483,17 @@
       z-index: 10;
       height: auto;
       min-height: 0;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 24px;
-      align-items: start;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      align-items: stretch;
       margin-bottom: 0;
       background: #ffffff;
     }
 
     .work-filter {
-      order: 2;
+      order: 1;
+      width: 100%;
       align-items: flex-end;
       gap: 7px;
       margin-bottom: 0;
@@ -464,13 +506,14 @@
     }
 
     .project-preview {
-      order: 1;
-      max-width: 58vw;
+      order: 2;
+      width: 100%;
+      max-width: none;
     }
 
     .project-preview h1 {
       max-width: 520px;
-      margin: 0 0 18px;
+      margin: 0 0 16px;
       font-size: clamp(22px, 4.2vw, 34px);
     }
 
@@ -487,9 +530,17 @@
       height: calc(100vh - 118px);
       margin-left: 0;
       overflow-y: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
-      padding: 240px 0 40px;
+      padding: 205px 0 40px;
+    }
+
+    .work-grid::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+      display: none;
     }
 
     .work-card,
@@ -518,8 +569,7 @@
       top: 108px;
       left: 16px;
       right: 16px;
-      grid-template-columns: 1fr auto;
-      gap: 14px;
+      gap: 18px;
     }
 
     .work-filter button {
@@ -528,13 +578,17 @@
     }
 
     .project-preview {
-      max-width: 56vw;
+      max-width: none;
     }
 
     .project-preview h1 {
       max-width: 100%;
-      margin: 0 0 14px;
+      margin: 0 0 12px;
       font-size: clamp(18px, 5.4vw, 25px);
+    }
+
+    .project-preview-info {
+      max-width: 70%;
     }
 
     .project-preview-info strong,
@@ -547,7 +601,15 @@
       height: calc(100vh - 108px);
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
-      padding: 220px 0 38px;
+      padding: 175px 0 38px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .work-grid::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+      display: none;
     }
 
     .work-card,
@@ -572,19 +634,24 @@
       opacity: 1;
       font-size: 12px;
     }
+
+    .back-to-top {
+      margin-top: 38px;
+      font-size: 12px;
+    }
   }
 
   @media (max-width: 420px) {
-    .project-preview {
-      max-width: 54vw;
-    }
-
     .project-preview h1 {
       font-size: clamp(17px, 5vw, 22px);
     }
 
+    .project-preview-info {
+      max-width: 76%;
+    }
+
     .work-grid {
-      padding-top: 210px;
+      padding-top: 165px;
     }
 
     .work-card,
