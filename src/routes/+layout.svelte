@@ -64,6 +64,23 @@
   function closeMenu() {
     menuOpen = false;
   }
+
+  $effect(() => {
+    if (typeof document === "undefined") return;
+
+    if (menuOpen) {
+      document.documentElement.classList.add("menu-open-lock");
+      document.body.classList.add("menu-open-lock");
+    } else {
+      document.documentElement.classList.remove("menu-open-lock");
+      document.body.classList.remove("menu-open-lock");
+    }
+
+    return () => {
+      document.documentElement.classList.remove("menu-open-lock");
+      document.body.classList.remove("menu-open-lock");
+    };
+  });
 </script>
 
 <header class="site-header" class:menu-is-open={menuOpen}>
@@ -209,6 +226,13 @@
 {@render children()}
 
 <style>
+  :global(html.menu-open-lock),
+  :global(body.menu-open-lock) {
+    overflow: hidden;
+    height: 100%;
+    touch-action: none;
+  }
+
   .site-header {
     position: fixed;
     inset: 0 0 auto;
@@ -268,28 +292,13 @@
     top: 32px;
     right: 28px;
     z-index: 105;
-
     color: #4e4e4e;
-
     font-family: Arial, Helvetica, sans-serif;
     font-size: 18px;
     font-weight: 400;
     line-height: 1;
     letter-spacing: -0.04em;
-
-    text-decoration: none;
-
-    width: auto;
-    height: auto;
-
-    transform: none;
-    transform-origin: initial;
-
     pointer-events: none;
-
-    transition:
-      color 0.25s ease,
-      opacity 0.25s ease;
   }
 
   .desktop-menu-text,
@@ -309,17 +318,9 @@
     pointer-events: auto;
   }
 
-  .desktop-menu-text:hover {
-    opacity: 0.6;
-  }
-
   .desktop-archive-fixed {
     bottom: 120px;
     pointer-events: auto;
-  }
-
-  .desktop-archive-fixed:hover {
-    opacity: 0.6;
   }
 
   .site-header.menu-is-open .desktop-page-label,
@@ -465,7 +466,6 @@
     font-weight: 400;
     line-height: 0.96;
     letter-spacing: -0.075em;
-    text-transform: none;
     transition:
       opacity 0.3s ease,
       transform 0.3s ease;
@@ -526,7 +526,7 @@
 
   @media (max-width: 1024px) {
     .logo {
-      top: 22px;
+      top: 20px;
       left: 24px;
       color: #2f2d2b;
       font-family: Georgia, "Times New Roman", serif;
@@ -557,7 +557,7 @@
 
     .menu-toggle {
       position: fixed;
-      top: 22px;
+      top: 24px;
       right: 24px;
       z-index: 105;
       display: flex;
@@ -596,13 +596,17 @@
 
     .main-nav {
       height: 100dvh;
-      padding: 120px 24px 64px;
+      max-height: 100dvh;
+      padding: 76px 24px 24px;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
-      gap: 38px;
+      gap: 18px;
       overflow-y: auto;
+      overflow-x: hidden;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
       background: radial-gradient(
           circle at top right,
           rgba(255, 255, 255, 0.12),
@@ -620,12 +624,13 @@
     .menu-links-area {
       position: static;
       transform: none;
+      flex-shrink: 0;
     }
 
     .menu-grid {
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 11px;
       overflow: visible;
     }
 
@@ -636,9 +641,9 @@
 
     .main-menu-link {
       color: #ffffff;
-      font-size: 1.35rem;
+      font-size: 0.82rem;
       font-weight: 300;
-      line-height: 1;
+      line-height: 0.95;
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
@@ -655,22 +660,23 @@
 
     .mobile-menu-extra {
       display: block;
-      padding-top: 24px;
+      padding-top: 16px;
       border-top: 1px solid rgba(255, 255, 255, 0.22);
+      flex-shrink: 0;
     }
 
     .mobile-social-icons {
       display: flex;
       flex-wrap: wrap;
-      gap: 18px;
-      margin-bottom: 28px;
+      gap: 12px;
+      margin-bottom: 16px;
     }
 
     .mobile-social-icons a {
       color: #ffffff;
-      font-size: 0.9rem;
+      font-size: 0.72rem;
       font-weight: 300;
-      letter-spacing: 0.09em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       opacity: 0.82;
     }
@@ -678,27 +684,27 @@
     .mobile-contact-info {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 7px;
       color: rgba(255, 255, 255, 0.72);
-      font-size: 0.95rem;
+      font-size: 0.76rem;
       font-weight: 300;
-      line-height: 1.45;
+      line-height: 1.25;
       text-align: left;
     }
 
     .mobile-contact-info p {
       margin: 0;
       color: #ffffff;
-      font-size: 1rem;
+      font-size: 0.78rem;
       font-weight: 400;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
     }
 
     .mobile-contact-info a {
       color: rgba(255, 255, 255, 0.72);
-      font-size: 0.95rem;
-      line-height: 1.45;
+      font-size: 0.76rem;
+      line-height: 1.25;
     }
 
     .mobile-contact-info address {
@@ -709,27 +715,111 @@
     .mobile-design-credit {
       display: block;
       margin-top: auto;
-      padding-top: 34px;
+      padding-top: 14px;
       color: rgba(255, 255, 255, 0.65);
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 400;
       line-height: 1;
       letter-spacing: 0.04em;
+      flex-shrink: 0;
     }
   }
 
   @media (max-width: 600px) {
+    .logo {
+      top: 18px;
+      left: 20px;
+      font-size: 1.25rem;
+    }
+
+    .menu-toggle {
+      top: 22px;
+      right: 20px;
+      width: 34px;
+    }
+
     .main-nav {
-      padding: 112px 24px 56px;
+      padding: 70px 20px 20px;
+      gap: 15px;
     }
 
     .menu-grid {
-      gap: 26px;
+      gap: 9px;
     }
 
     .main-menu-link {
-      font-size: 1.3rem;
+      font-size: 0.78rem;
+      line-height: 0.92;
+    }
+
+    .mobile-menu-extra {
+      padding-top: 14px;
+    }
+
+    .mobile-social-icons {
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .mobile-social-icons a {
+      font-size: 0.68rem;
+    }
+
+    .mobile-contact-info {
+      gap: 6px;
+      font-size: 0.72rem;
+      line-height: 1.2;
+    }
+
+    .mobile-contact-info p,
+    .mobile-contact-info a {
+      font-size: 0.72rem;
+    }
+
+    .mobile-design-credit {
+      padding-top: 10px;
+      font-size: 10px;
+    }
+  }
+
+  @media (max-height: 700px) and (max-width: 1024px) {
+    .main-nav {
+      padding-top: 64px;
+      gap: 12px;
+    }
+
+    .menu-grid {
+      gap: 7px;
+    }
+
+    .main-menu-link {
+      font-size: 0.72rem;
+      line-height: 0.9;
+    }
+
+    .mobile-menu-extra {
+      padding-top: 10px;
+    }
+
+    .mobile-social-icons {
+      margin-bottom: 10px;
+    }
+
+    .mobile-contact-info {
+      gap: 4px;
+      font-size: 0.68rem;
+      line-height: 1.15;
+    }
+
+    .mobile-contact-info p,
+    .mobile-contact-info a {
+      font-size: 0.68rem;
+    }
+
+    .mobile-design-credit {
+      padding-top: 8px;
+      font-size: 9px;
     }
   }
 </style>
