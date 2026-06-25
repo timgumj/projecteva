@@ -167,7 +167,7 @@
 </script>
 
 <svelte:head>
-  <title>{artistName} | Contemporary Artist Portfolio and Exhibitions</title>
+  <title>{artistName} | Contemporary Artist in Vienna</title>
 
   <meta
     name="description"
@@ -338,7 +338,7 @@
     color: #bdbdbd;
     font-size: 15px;
     font-weight: 900;
-    line-height: 1.08;
+    line-height: 1;
     text-align: left;
     cursor: pointer;
   }
@@ -392,11 +392,12 @@
     font-size: 16px;
     font-weight: 400;
     line-height: 1;
+    text-transform: uppercase;
   }
 
   .project-preview-info :global(p) {
     margin: 0;
-    text-transform: none;
+    text-transform: uppercase;
   }
 
   .case-count {
