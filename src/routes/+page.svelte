@@ -5,7 +5,7 @@
   let hoveredWorkId = $state(null);
   let workGridElement = $state(null);
 
-  const artistName = "Eva Full Name";
+  const artistName = "Eva Eichinger ";
 
   let allWorks = $derived(data.works || []);
 
