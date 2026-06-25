@@ -424,6 +424,7 @@
     padding-right: 6px;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    text-transform: uppercase;
   }
 
   .painting-description::-webkit-scrollbar {
@@ -434,6 +435,7 @@
 
   .painting-description p {
     margin: 0;
+    text-transform: uppercase;
   }
 
   .info-toggle {
