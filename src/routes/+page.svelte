@@ -32,7 +32,7 @@
 
     const slug = slugify(rawSlug);
 
-    if (slug === "painting" || slug === "paintings") return "painting";
+    if (slug === "painting" || slug === "paintings") return "paintings";
     if (slug === "performance" || slug === "performances")
       return "performances";
     if (slug === "exhibition" || slug === "exhibitions") return "exhibitions";
@@ -272,10 +272,15 @@
 </main>
 
 <style>
+  :global(html),
+  :global(body),
+  .work-page {
+    font-family: "Inconsolata", monospace;
+  }
+
   :global(body) {
     margin: 0;
     overflow-x: hidden;
-    font-family: Arial, Helvetica, sans-serif;
     background: #ffffff;
     color: #000000;
   }
@@ -289,13 +294,23 @@
     min-height: 100vh;
     padding: 96px 90px 90px 28px;
     background: #ffffff;
+    text-transform: uppercase;
+  }
+
+  .work-page button,
+  .work-page a {
+    font-family: inherit;
+  }
+
+  .work-page p {
+    text-transform: none;
   }
 
   .work-layout {
     width: 100%;
     display: grid;
     grid-template-columns: 19% 81%;
-    gap: 24px;
+    gap: 32px;
     align-items: start;
   }
 
@@ -321,12 +336,10 @@
     border: 0;
     background: transparent;
     color: #bdbdbd;
-    font-family: Arial, Helvetica, sans-serif;
     font-size: 15px;
     font-weight: 900;
     line-height: 1.08;
     text-align: left;
-    text-transform: uppercase;
     cursor: pointer;
   }
 
@@ -343,10 +356,10 @@
     max-width: 340px;
     margin: 0 0 46px;
     color: #000000;
-    font-size: clamp(27px, 2.55vw, 45px);
-    font-weight: 400;
+    font-size: clamp(26px, 2.55vw, 24px);
+    font-weight: 600;
     line-height: 1;
-    letter-spacing: -0.055em;
+    letter-spacing: 0em;
   }
 
   .mobile-title {
@@ -368,22 +381,22 @@
     display: block;
     margin: 0 0 8px;
     color: #000000;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 900;
     line-height: 1;
-    text-transform: uppercase;
   }
 
   .project-preview-info p {
     margin: 0;
-    color: #000000;
-    font-size: 14px;
+    color: #2c2b2b;
+    font-size: 16px;
     font-weight: 400;
-    line-height: 1.2;
+    line-height: 1;
   }
 
   .project-preview-info :global(p) {
     margin: 0;
+    text-transform: none;
   }
 
   .case-count {
@@ -391,27 +404,53 @@
     font-size: 14px;
     font-weight: 900;
     line-height: 1;
-    text-transform: uppercase;
   }
 
   .work-grid {
-    width: calc(100% + 10px);
-    margin-left: -10px;
+    width: 100%;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 12px;
-    row-gap: 12px;
-    padding: 0;
+    column-gap: 28px;
+    row-gap: 34px;
+    padding: 6px 0 40px;
   }
 
   .work-card {
     position: relative;
     display: block;
-    min-height: 560px;
+    min-height: 570px;
     overflow: hidden;
     color: #000000;
-    background: #eeeeee;
+    background: #f6f6f4;
     text-decoration: none;
+    isolation: isolate;
+  }
+
+  .work-card::before {
+    content: "";
+    position: absolute;
+    inset: 14px;
+    z-index: 2;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 0.35s ease,
+      inset 0.35s ease;
+  }
+
+  .work-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.08),
+      rgba(0, 0, 0, 0.08)
+    );
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
   }
 
   .work-card figure {
@@ -421,33 +460,50 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #eeeeee;
+    background: #f6f6f4;
   }
 
   .work-card img {
     width: 100%;
     height: 100%;
-    min-height: 560px;
+    min-height: 570px;
     display: block;
     object-fit: cover;
     object-position: center;
+    transform: scale(1.015);
     transition:
       opacity 0.35s ease,
-      width 0.55s ease,
-      height 0.55s ease,
-      transform 0.55s ease,
-      filter 0.55s ease;
+      width 0.6s ease,
+      height 0.6s ease,
+      transform 0.6s ease,
+      filter 0.6s ease;
   }
 
   .work-grid:hover .work-card img {
-    opacity: 0.12;
-    filter: grayscale(10%);
+    opacity: 0.22;
+    filter: grayscale(20%) contrast(0.88);
+  }
+
+  .work-grid:hover .work-card:hover,
+  .work-grid:hover .work-card.active {
+    background: #f8f7f4;
+  }
+
+  .work-grid:hover .work-card:hover::before,
+  .work-grid:hover .work-card.active::before {
+    inset: 18px;
+    opacity: 1;
+  }
+
+  .work-grid:hover .work-card:hover::after,
+  .work-grid:hover .work-card.active::after {
+    opacity: 1;
   }
 
   .work-grid:hover .work-card:hover img,
   .work-grid:hover .work-card.active img {
-    width: 92%;
-    height: 92%;
+    width: calc(100% - 54px);
+    height: calc(100% - 54px);
     min-height: 0;
     opacity: 1;
     object-fit: contain;
@@ -461,15 +517,18 @@
 
   .work-number {
     position: absolute;
-    top: 10px;
-    left: 10px;
+    top: 24px;
+    left: 24px;
     z-index: 4;
     color: #000000;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 900;
     line-height: 1;
+    letter-spacing: 0.04em;
     opacity: 0;
-    transition: opacity 0.25s ease;
+    transition:
+      opacity 0.25s ease,
+      transform 0.25s ease;
   }
 
   .mobile-work-title {
@@ -479,6 +538,7 @@
   .work-card:hover .work-number,
   .work-card.active .work-number {
     opacity: 1;
+    transform: translateY(0);
   }
 
   .back-to-top {
@@ -490,11 +550,9 @@
     border: 0;
     background: transparent;
     color: #000000;
-    font-family: Arial, Helvetica, sans-serif;
     font-size: 14px;
     font-weight: 900;
     line-height: 1;
-    text-transform: uppercase;
     cursor: pointer;
   }
 
@@ -503,7 +561,44 @@
     padding: 120px 0;
     font-size: 15px;
     font-weight: 900;
-    text-transform: uppercase;
+  }
+
+  @media (min-width: 1025px) {
+    .work-card:nth-child(even) {
+      transform: translateY(42px);
+    }
+
+    .work-card:nth-child(4n + 1) {
+      min-height: 640px;
+    }
+
+    .work-card:nth-child(4n + 1) img {
+      min-height: 640px;
+    }
+
+    .work-card:nth-child(4n + 2) {
+      min-height: 520px;
+    }
+
+    .work-card:nth-child(4n + 2) img {
+      min-height: 520px;
+    }
+
+    .work-card:nth-child(4n + 3) {
+      min-height: 540px;
+    }
+
+    .work-card:nth-child(4n + 3) img {
+      min-height: 540px;
+    }
+
+    .work-card:nth-child(4n + 4) {
+      min-height: 650px;
+    }
+
+    .work-card:nth-child(4n + 4) img {
+      min-height: 650px;
+    }
   }
 
   @media (max-width: 1280px) {
@@ -513,16 +608,41 @@
 
     .work-layout {
       grid-template-columns: 21% 79%;
-      gap: 24px;
+      gap: 28px;
     }
 
     .project-preview h1 {
       font-size: clamp(26px, 2.4vw, 38px);
     }
 
+    .work-grid {
+      column-gap: 22px;
+      row-gap: 30px;
+    }
+
     .work-card,
     .work-card img {
       min-height: 500px;
+    }
+
+    .work-card:nth-child(4n + 1),
+    .work-card:nth-child(4n + 1) img {
+      min-height: 570px;
+    }
+
+    .work-card:nth-child(4n + 2),
+    .work-card:nth-child(4n + 2) img {
+      min-height: 470px;
+    }
+
+    .work-card:nth-child(4n + 3),
+    .work-card:nth-child(4n + 3) img {
+      min-height: 490px;
+    }
+
+    .work-card:nth-child(4n + 4),
+    .work-card:nth-child(4n + 4) img {
+      min-height: 580px;
     }
   }
 
@@ -660,10 +780,21 @@
       background: transparent;
     }
 
-    .work-card {
+    .work-card,
+    .work-card:nth-child(even),
+    .work-card:nth-child(4n + 1),
+    .work-card:nth-child(4n + 2),
+    .work-card:nth-child(4n + 3),
+    .work-card:nth-child(4n + 4) {
       min-height: auto;
       overflow: visible;
       background: transparent;
+      transform: none;
+    }
+
+    .work-card::before,
+    .work-card::after {
+      display: none;
     }
 
     .work-card figure {
@@ -672,8 +803,15 @@
       overflow: hidden;
     }
 
-    .work-card img {
+    .work-card img,
+    .work-card:nth-child(4n + 1) img,
+    .work-card:nth-child(4n + 2) img,
+    .work-card:nth-child(4n + 3) img,
+    .work-card:nth-child(4n + 4) img {
+      width: 100%;
+      height: 100%;
       min-height: 440px;
+      transform: none;
     }
 
     .work-grid:hover .work-card img {
@@ -699,6 +837,7 @@
       display: block;
       opacity: 1;
       font-size: 14px;
+      transform: none;
     }
 
     .mobile-work-title {
@@ -708,7 +847,6 @@
       font-size: 12px;
       font-weight: 700;
       line-height: 1.08;
-      text-transform: uppercase;
     }
 
     .back-to-top {

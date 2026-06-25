@@ -250,7 +250,7 @@
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 4px;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: "Inconsolata", monospace;
     font-size: 21px;
     font-weight: 400;
     line-height: 1;
@@ -275,7 +275,7 @@
     align-items: center;
     justify-content: center;
     color: #2f2d2b;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: "Inconsolata", monospace;
     font-size: 21px;
     font-weight: 400;
     line-height: 1;
@@ -293,7 +293,7 @@
     right: 28px;
     z-index: 105;
     color: #4e4e4e;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: "Inconsolata", monospace;
     font-size: 18px;
     font-weight: 400;
     line-height: 1;
@@ -374,7 +374,7 @@
 
   .desktop-menu-brand {
     color: #ffffff;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: "Inconsolata", monospace;
     font-size: clamp(30px, 3vw, 44px);
     font-weight: 400;
     line-height: 1;
@@ -384,7 +384,7 @@
   .desktop-menu-address {
     margin-top: 18px;
     color: rgba(255, 255, 255, 0.72);
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: "Inconsolata", monospace;
     font-size: 13px;
     font-weight: 400;
     line-height: 1.45;
@@ -456,7 +456,7 @@
   .main-nav a {
     color: #ffffff;
     text-decoration: none;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: "Inconsolata", monospace;
   }
 
   .main-menu-link {
@@ -502,7 +502,7 @@
     left: 28px;
     bottom: 28px;
     color: #ffffff;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: "Inconsolata", monospace;
     font-size: 14px;
     font-weight: 700;
     line-height: 1;
@@ -513,7 +513,7 @@
     right: 28px;
     bottom: 28px;
     color: #ffffff;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: "Inconsolata", monospace;
     font-size: 14px;
     font-weight: 700;
     line-height: 1;
@@ -529,7 +529,7 @@
       top: 20px;
       left: 24px;
       color: #2f2d2b;
-      font-family: Georgia, "Times New Roman", serif;
+      font-family: "Inconsolata", monospace;
       font-size: 1.45rem;
       letter-spacing: 0.055em;
       text-decoration: underline;
@@ -636,7 +636,7 @@
 
     .main-nav a {
       color: #ffffff;
-      font-family: Georgia, "Times New Roman", serif;
+      font-family: "Inconsolata", monospace;
     }
 
     .main-menu-link {
@@ -717,7 +717,7 @@
       margin-top: auto;
       padding-top: 14px;
       color: rgba(255, 255, 255, 0.65);
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: "Inconsolata", monospace;
       font-size: 11px;
       font-weight: 400;
       line-height: 1;

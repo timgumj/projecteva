@@ -270,7 +270,7 @@
   :global(body) {
     margin: 0;
     overflow-x: hidden;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: "Inconsolata", monospace;
     background: #ffffff;
     color: #000000;
   }
@@ -284,6 +284,11 @@
     min-height: 100vh;
     padding: 96px 90px 90px 28px;
     background: #ffffff;
+    text-transform: uppercase;
+  }
+
+  .paintings-page p {
+    text-transform: none;
   }
 
   .paintings-layout {
@@ -349,14 +354,13 @@
     border: 0;
     background: transparent;
     color: #bdbdbd;
-    font-family: Arial, Helvetica, sans-serif;
     font-size: 14px;
     font-weight: 600;
     line-height: 1.08;
     text-align: left;
-    text-transform: uppercase;
     cursor: pointer;
     transition: color 0.3s ease;
+    text-transform: uppercase;
   }
 
   .selected-painting-button {
@@ -391,7 +395,7 @@
     color: #000000;
     font-size: clamp(24px, 2vw, 30px);
     font-weight: 400;
-    line-height: 0.5;
+    line-height: 1;
     letter-spacing: -0.055em;
   }
 
@@ -438,11 +442,9 @@
     border: 0;
     background: transparent;
     color: #000000;
-    font-family: Arial, Helvetica, sans-serif;
     font-size: 12px;
     font-weight: 900;
     line-height: 1;
-    text-transform: uppercase;
     cursor: pointer;
   }
 
@@ -521,11 +523,9 @@
     border: 0;
     background: transparent;
     color: #000000;
-    font-family: Arial, Helvetica, sans-serif;
     font-size: 14px;
     font-weight: 900;
     line-height: 1;
-    text-transform: uppercase;
     cursor: pointer;
   }
 
@@ -534,7 +534,6 @@
     color: #000000;
     font-size: 14px;
     font-weight: 900;
-    text-transform: uppercase;
   }
 
   .painting-lightbox {
@@ -572,11 +571,11 @@
     font-size: 12px;
     font-weight: 400;
     line-height: 1.35;
-    text-transform: uppercase;
   }
 
   .lightbox-meta p {
     margin: 0;
+    text-transform: none;
   }
 
   .lightbox-close {
@@ -587,9 +586,7 @@
     border: 0;
     background: transparent;
     color: #000000;
-    font-family: inherit;
     font-size: 13px;
-    text-transform: uppercase;
     cursor: pointer;
   }
 
@@ -600,7 +597,6 @@
     border-radius: 50%;
     background: #ffffff;
     color: #000000;
-    font-family: inherit;
     font-size: 18px;
     cursor: pointer;
   }
