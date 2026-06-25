@@ -571,9 +571,11 @@
       left: 24px;
       color: #2f2d2b;
       font-size: 1.45rem;
+      font-weight: 700;
       letter-spacing: 0.055em;
       text-decoration: underline;
       text-decoration-thickness: 1px;
+      text-transform: uppercase;
       text-underline-offset: 7px;
     }
 
@@ -764,6 +766,8 @@
       top: 18px;
       left: 20px;
       font-size: 1.25rem;
+      font-weight: 600;
+      text-transform: uppercase;
     }
 
     .menu-toggle {
