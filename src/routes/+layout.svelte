@@ -50,6 +50,7 @@
     if (path.startsWith("/about")) return "About";
     if (path.startsWith("/painting")) return "Paintings";
     if (path.startsWith("/exhibitions")) return "Exhibitions";
+    if (path.startsWith("/performances")) return "Performances";
     if (path.startsWith("/event")) return "Events";
     if (path.startsWith("/archive")) return "Archive";
     if (path.startsWith("/contact")) return "Contact";
@@ -91,21 +92,24 @@
   </div>
 
   <button
-    class="desktop-side-label desktop-menu-text"
+    class="desktop-menu-control"
     type="button"
     aria-label={menuOpen ? "Close menu" : "Open menu"}
     aria-expanded={menuOpen}
     onclick={toggleMenu}
   >
-    {menuOpen ? "Close" : "Menu"}
+    <span class="desktop-menu-control-text">
+      {menuOpen ? "Close" : "Menu"}
+    </span>
+
+    <span class="desktop-menu-control-icon" aria-hidden="true">
+      <span></span>
+      <span></span>
+    </span>
   </button>
 
-  <a
-    href="/archive"
-    class="desktop-side-label desktop-archive-fixed"
-    onclick={closeMenu}
-  >
-    Archive
+  <a href="/archive" class="desktop-archive-fixed" onclick={closeMenu}>
+    BIBLO
   </a>
 
   <button
@@ -226,11 +230,22 @@
 {@render children()}
 
 <style>
+  :global(:root) {
+    --site-font-family: "Inconsolata", monospace;
+  }
+
   :global(html.menu-open-lock),
   :global(body.menu-open-lock) {
     overflow: hidden;
     height: 100%;
     touch-action: none;
+  }
+
+  .site-header,
+  .site-header *,
+  .main-nav,
+  .main-nav * {
+    font-family: var(--site-font-family);
   }
 
   .site-header {
@@ -250,11 +265,11 @@
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 4px;
-    font-family: "Inconsolata", monospace;
-    font-size: 21px;
-    font-weight: 400;
+    font-size: 24px;
+    font-weight: 800;
     line-height: 1;
-    letter-spacing: -0.04em;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
     pointer-events: auto;
     transition:
       color 0.25s ease,
@@ -265,62 +280,100 @@
     opacity: 0.7;
   }
 
-  .desktop-side-label {
-    position: fixed;
-    right: -22px;
-    z-index: 105;
-    width: 110px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #2f2d2b;
-    font-family: "Inconsolata", monospace;
-    font-size: 21px;
-    font-weight: 400;
-    line-height: 1;
-    letter-spacing: -0.04em;
-    transform: rotate(-90deg);
-    transform-origin: center center;
-    transition:
-      color 0.25s ease,
-      opacity 0.25s ease;
-  }
-
   .desktop-page-label {
     position: fixed;
     top: 32px;
     right: 28px;
     z-index: 105;
     color: #4e4e4e;
-    font-family: "Inconsolata", monospace;
     font-size: 18px;
-    font-weight: 400;
+    font-weight: 800;
     line-height: 1;
     letter-spacing: -0.04em;
+    text-transform: uppercase;
     pointer-events: none;
   }
 
-  .desktop-menu-text,
-  .desktop-archive-fixed {
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 4px;
-  }
-
-  .desktop-menu-text {
+  .desktop-menu-control {
+    position: fixed;
     top: 50%;
-    margin-top: -14px;
+    right: 28px;
+    z-index: 105;
+    display: flex;
+    width: 40px;
     padding: 0;
     border: 0;
     background: transparent;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: #2f2d2b;
     cursor: pointer;
     pointer-events: auto;
+    transform: translateY(-50%);
+  }
+
+  .desktop-menu-control-text {
+    color: currentColor;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .desktop-menu-control-icon {
+    position: relative;
+    display: flex;
+    width: 34px;
+    height: 16px;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .desktop-menu-control-icon span {
+    display: block;
+    width: 100%;
+    height: 1px;
+    background: currentColor;
+    transition:
+      transform 0.25s ease,
+      background 0.25s ease;
+  }
+
+  .desktop-menu-control[aria-expanded="true"] {
+    color: #ffffff;
+  }
+
+  .desktop-menu-control[aria-expanded="true"]
+    .desktop-menu-control-icon
+    span:nth-child(1) {
+    transform: translateY(7.5px) rotate(45deg);
+  }
+
+  .desktop-menu-control[aria-expanded="true"]
+    .desktop-menu-control-icon
+    span:nth-child(2) {
+    transform: translateY(-7.5px) rotate(-45deg);
   }
 
   .desktop-archive-fixed {
+    position: fixed;
+    right: 28px;
     bottom: 120px;
+    z-index: 105;
+    color: #2f2d2b;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
     pointer-events: auto;
+    transition:
+      color 0.25s ease,
+      opacity 0.25s ease;
   }
 
   .site-header.menu-is-open .desktop-page-label,
@@ -329,13 +382,6 @@
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-  }
-
-  .site-header.menu-is-open .desktop-menu-text {
-    color: #ffffff;
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
   }
 
   .menu-toggle {
@@ -349,7 +395,7 @@
     width: 100%;
     height: 100dvh;
     overflow: hidden;
-    background-color: #000000;
+    background: #000000;
     color: #ffffff;
     opacity: 0;
     pointer-events: none;
@@ -374,7 +420,6 @@
 
   .desktop-menu-brand {
     color: #ffffff;
-    font-family: "Inconsolata", monospace;
     font-size: clamp(30px, 3vw, 44px);
     font-weight: 400;
     line-height: 1;
@@ -384,7 +429,6 @@
   .desktop-menu-address {
     margin-top: 18px;
     color: rgba(255, 255, 255, 0.72);
-    font-family: "Inconsolata", monospace;
     font-size: 13px;
     font-weight: 400;
     line-height: 1.45;
@@ -456,7 +500,6 @@
   .main-nav a {
     color: #ffffff;
     text-decoration: none;
-    font-family: "Inconsolata", monospace;
   }
 
   .main-menu-link {
@@ -502,7 +545,6 @@
     left: 28px;
     bottom: 28px;
     color: #ffffff;
-    font-family: "Inconsolata", monospace;
     font-size: 14px;
     font-weight: 700;
     line-height: 1;
@@ -513,7 +555,6 @@
     right: 28px;
     bottom: 28px;
     color: #ffffff;
-    font-family: "Inconsolata", monospace;
     font-size: 14px;
     font-weight: 700;
     line-height: 1;
@@ -529,7 +570,6 @@
       top: 20px;
       left: 24px;
       color: #2f2d2b;
-      font-family: "Inconsolata", monospace;
       font-size: 1.45rem;
       letter-spacing: 0.055em;
       text-decoration: underline;
@@ -538,7 +578,7 @@
     }
 
     .desktop-page-label,
-    .desktop-menu-text,
+    .desktop-menu-control,
     .desktop-archive-fixed,
     .desktop-menu-brand-block,
     .desktop-menu-images,
@@ -607,12 +647,7 @@
       overflow-x: hidden;
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
-      background: radial-gradient(
-          circle at top right,
-          rgba(255, 255, 255, 0.12),
-          transparent 34%
-        ),
-        linear-gradient(180deg, #050505 0%, #000000 100%);
+      background: #000000;
       color: #ffffff;
       transform: translateX(100%);
     }
@@ -636,7 +671,6 @@
 
     .main-nav a {
       color: #ffffff;
-      font-family: "Inconsolata", monospace;
     }
 
     .main-menu-link {
@@ -717,7 +751,6 @@
       margin-top: auto;
       padding-top: 14px;
       color: rgba(255, 255, 255, 0.65);
-      font-family: "Inconsolata", monospace;
       font-size: 11px;
       font-weight: 400;
       line-height: 1;

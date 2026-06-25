@@ -292,7 +292,7 @@
   .work-page {
     width: 100%;
     min-height: 100vh;
-    padding: 96px 90px 90px 28px;
+    padding: 96px 72px 90px 28px;
     background: #ffffff;
     text-transform: uppercase;
   }
@@ -309,8 +309,8 @@
   .work-layout {
     width: 100%;
     display: grid;
-    grid-template-columns: 19% 81%;
-    gap: 32px;
+    grid-template-columns: clamp(210px, 15vw, 265px) minmax(0, 1fr);
+    gap: 16px;
     align-items: start;
   }
 
@@ -336,7 +336,7 @@
     border: 0;
     background: transparent;
     color: #bdbdbd;
-    font-size: 15px;
+    font-size: clamp(13px, 0.8vw, 15px);
     font-weight: 900;
     line-height: 1;
     text-align: left;
@@ -353,11 +353,11 @@
   }
 
   .project-preview h1 {
-    max-width: 340px;
+    max-width: 300px;
     margin: 0 0 46px;
     color: #000000;
-    font-size: clamp(26px, 2.55vw, 24px);
-    font-weight: 600;
+    font-size: clamp(14px, 0.85vw, 16px);
+    font-weight: 800;
     line-height: 1;
     letter-spacing: 0em;
   }
@@ -374,14 +374,14 @@
   }
 
   .project-preview-info {
-    max-width: 330px;
+    max-width: 285px;
   }
 
   .project-preview-info strong {
     display: block;
     margin: 0 0 8px;
     color: #000000;
-    font-size: 16px;
+    font-size: clamp(14px, 0.85vw, 16px);
     font-weight: 900;
     line-height: 1;
   }
@@ -389,7 +389,7 @@
   .project-preview-info p {
     margin: 0;
     color: #2c2b2b;
-    font-size: 16px;
+    font-size: clamp(12px, 0.72vw, 14px);
     font-weight: 400;
     line-height: 1;
     text-transform: uppercase;
@@ -402,24 +402,25 @@
 
   .case-count {
     color: #000000;
-    font-size: 14px;
+    font-size: clamp(12px, 0.72vw, 14px);
     font-weight: 900;
     line-height: 1;
   }
 
   .work-grid {
     width: 100%;
+    min-width: 0;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 28px;
-    row-gap: 34px;
+    column-gap: clamp(18px, 1.45vw, 28px);
+    row-gap: clamp(26px, 1.8vw, 34px);
     padding: 6px 0 40px;
   }
 
   .work-card {
     position: relative;
     display: block;
-    min-height: 570px;
+    min-height: clamp(500px, 32vw, 570px);
     overflow: hidden;
     color: #000000;
     background: #f6f6f4;
@@ -467,7 +468,7 @@
   .work-card img {
     width: 100%;
     height: 100%;
-    min-height: 570px;
+    min-height: clamp(500px, 32vw, 570px);
     display: block;
     object-fit: cover;
     object-position: center;
@@ -570,50 +571,81 @@
     }
 
     .work-card:nth-child(4n + 1) {
-      min-height: 640px;
+      min-height: clamp(570px, 35vw, 640px);
     }
 
     .work-card:nth-child(4n + 1) img {
-      min-height: 640px;
+      min-height: clamp(570px, 35vw, 640px);
     }
 
     .work-card:nth-child(4n + 2) {
-      min-height: 520px;
+      min-height: clamp(470px, 28vw, 520px);
     }
 
     .work-card:nth-child(4n + 2) img {
-      min-height: 520px;
+      min-height: clamp(470px, 28vw, 520px);
     }
 
     .work-card:nth-child(4n + 3) {
-      min-height: 540px;
+      min-height: clamp(490px, 29vw, 540px);
     }
 
     .work-card:nth-child(4n + 3) img {
-      min-height: 540px;
+      min-height: clamp(490px, 29vw, 540px);
     }
 
     .work-card:nth-child(4n + 4) {
-      min-height: 650px;
+      min-height: clamp(580px, 36vw, 650px);
     }
 
     .work-card:nth-child(4n + 4) img {
-      min-height: 650px;
+      min-height: clamp(580px, 36vw, 650px);
+    }
+  }
+
+  @media (min-width: 1440px) {
+    .work-page {
+      padding-right: 72px;
+    }
+
+    .work-layout {
+      grid-template-columns: clamp(210px, 14vw, 255px) minmax(0, 1fr);
+      gap: 14px;
+    }
+  }
+
+  @media (min-width: 1680px) {
+    .work-page {
+      padding-right: 76px;
+    }
+
+    .work-layout {
+      grid-template-columns: 250px minmax(0, 1fr);
+      gap: 14px;
+    }
+
+    .project-preview h1 {
+      max-width: 285px;
+    }
+
+    .project-preview-info {
+      max-width: 275px;
     }
   }
 
   @media (max-width: 1280px) {
     .work-page {
-      padding: 96px 80px 90px 28px;
+      padding: 96px 72px 90px 28px;
     }
 
     .work-layout {
-      grid-template-columns: 21% 79%;
-      gap: 28px;
+      grid-template-columns: clamp(210px, 18vw, 250px) minmax(0, 1fr);
+      gap: 18px;
     }
 
     .project-preview h1 {
-      font-size: clamp(26px, 2.4vw, 38px);
+      max-width: 300px;
+      font-size: clamp(14px, 1vw, 16px);
     }
 
     .work-grid {
