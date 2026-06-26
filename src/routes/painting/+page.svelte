@@ -124,7 +124,9 @@
         <div class="navigation-area">
           <div class="section-links">
             <button type="button" class="section-button active">
-              Selected Paintings
+              <span class="section-label">
+                <span>Selected Paintings</span>
+              </span>
             </button>
           </div>
 
@@ -140,7 +142,9 @@
                   {String(index + 1).padStart(2, "0")}
                 </span>
 
-                <span>{painting.title}</span>
+                <span class="painting-button-label">
+                  <span>{painting.title}</span>
+                </span>
               </button>
             {/each}
           </div>
@@ -198,6 +202,10 @@
                       alt={image.alt || selectedPainting.title}
                     />
                   </figure>
+
+                  <span class="image-number">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
                 </button>
               {/each}
 
@@ -356,36 +364,75 @@
 
   .section-button,
   .selected-painting-button {
+    position: relative;
     width: auto;
     margin: 0;
     padding: 0;
     border: 0;
     background: transparent;
-    color: #bdbdbd;
-    font-size: clamp(12px, 0.8vw, 14px);
+    color: #b8b8b8;
+    font-size: clamp(12px, 0.78vw, 13px);
     font-weight: 700;
     line-height: 1;
+    letter-spacing: 0.01em;
     text-align: left;
     cursor: pointer;
-    transition: color 0.25s ease;
+    transition:
+      color 0.28s ease,
+      opacity 0.28s ease;
     text-transform: uppercase;
+  }
+
+  .section-button {
+    color: #000000;
+  }
+
+  .section-button::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -3px;
+    width: 100%;
+    height: 1px;
+    background: currentColor;
+    opacity: 0.65;
   }
 
   .selected-painting-button {
     display: flex;
     align-items: baseline;
-    gap: 0px;
+    gap: 6px;
+  }
+
+  .section-button:hover .section-label span,
+  .section-button.active .section-label span,
+  .selected-painting-button:hover .painting-button-label span,
+  .selected-painting-button.active .painting-button-label span {
+    animation: paintingTextLift 0.42s ease both;
   }
 
   .painting-list-number {
-    min-width: 22px;
-    margin-right: 0px;
     display: inline-block;
+    min-width: 17px;
     flex-shrink: 0;
     color: inherit;
-    font-size: 0.9em;
-    font-weight: 900;
+    font-size: 0.82em;
+    font-weight: 700;
     letter-spacing: 0.04em;
+    opacity: 0.62;
+    transform: translateY(-0.5px);
+  }
+
+  .section-label,
+  .painting-button-label {
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+  }
+
+  .section-label span,
+  .painting-button-label span {
+    display: inline-block;
   }
 
   .section-button.active,
@@ -397,18 +444,53 @@
     color: #000000;
   }
 
+  @keyframes paintingTextLift {
+    0% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    42% {
+      transform: translateY(-110%);
+      opacity: 0;
+    }
+
+    43% {
+      transform: translateY(110%);
+      opacity: 0;
+    }
+
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
   .painting-preview {
     width: 100%;
   }
 
   .painting-preview h1 {
-    max-width: 300px;
-    margin: 0 0 46px;
+    max-width: 280px;
+    margin: 0 0 42px;
     color: #000000;
-    font-size: clamp(12px, 0.85vw, 16px);
+    font-size: clamp(12px, 0.78vw, 14px);
     font-weight: 700;
-    line-height: 1;
-    letter-spacing: 0em;
+    line-height: 1.04;
+    letter-spacing: 0.005em;
+    animation: previewTitleIn 0.46s ease both;
+  }
+
+  @keyframes previewTitleIn {
+    0% {
+      opacity: 0;
+      transform: translateY(5px);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .preview-bottom {
@@ -419,15 +501,16 @@
   }
 
   .preview-info {
-    max-width: 285px;
+    max-width: 265px;
   }
 
   .preview-info p {
     margin: 0;
-    color: #2c2b2b;
-    font-size: clamp(12px, 0.72vw, 14px);
+    color: #262626;
+    font-size: clamp(11px, 0.66vw, 12px);
     font-weight: 500;
-    line-height: 1;
+    line-height: 1.16;
+    letter-spacing: 0.006em;
     text-transform: uppercase;
   }
 
@@ -473,50 +556,57 @@
     min-width: 0;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: clamp(18px, 1.45vw, 28px);
-    row-gap: clamp(26px, 1.8vw, 34px);
+    column-gap: clamp(20px, 1.6vw, 30px);
+    row-gap: clamp(28px, 2vw, 38px);
     padding: 6px 0 40px;
   }
 
   .image-card {
     position: relative;
     display: block;
-    min-height: clamp(500px, 32vw, 570px);
+    height: clamp(455px, 28vw, 515px);
+    min-height: 0;
     overflow: hidden;
     padding: 0;
     border: 0;
     color: #000000;
-    background: #f6f6f4;
+    background: #f8f8f6;
     text-align: left;
     cursor: pointer;
     isolation: isolate;
+    transition:
+      background 0.45s ease,
+      transform 0.45s ease;
   }
 
   .image-card::before {
     content: "";
     position: absolute;
-    inset: 14px;
+    inset: 0;
     z-index: 2;
+    background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.22),
+        rgba(255, 255, 255, 0) 30%
+      ),
+      linear-gradient(to top, rgba(0, 0, 0, 0.055), rgba(0, 0, 0, 0) 42%);
     opacity: 0;
     pointer-events: none;
-    transition:
-      opacity 0.35s ease,
-      inset 0.35s ease;
+    transition: opacity 0.42s ease;
   }
 
   .image-card::after {
     content: "";
     position: absolute;
-    inset: 0;
-    z-index: 1;
-    background: linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.08),
-      rgba(0, 0, 0, 0.08)
-    );
+    inset: 18px;
+    z-index: 3;
+    background: rgba(255, 255, 255, 0.06);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.35s ease;
+    transform: scale(0.985);
+    transition:
+      opacity 0.42s ease,
+      transform 0.42s ease;
   }
 
   .image-card figure {
@@ -526,55 +616,78 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f6f6f4;
+    background: #f8f8f6;
   }
 
   .image-card img {
     width: 100%;
     height: 100%;
-    min-height: clamp(500px, 32vw, 570px);
+    min-height: 0;
     display: block;
     object-fit: cover;
     object-position: center;
-    transform: scale(1.015);
+    transform: scale(1.01);
     transition:
-      opacity 0.35s ease,
-      width 0.6s ease,
-      height 0.6s ease,
-      transform 0.6s ease,
-      filter 0.6s ease;
+      opacity 0.45s ease,
+      width 0.65s ease,
+      height 0.65s ease,
+      transform 0.65s ease,
+      filter 0.65s ease;
   }
 
   .image-grid:hover .image-card img {
-    opacity: 0.22;
-    filter: grayscale(20%) contrast(0.88);
+    opacity: 0.38;
+    filter: grayscale(12%) contrast(0.94) brightness(1.03);
   }
 
   .image-grid:hover .image-card:hover,
   .image-grid:hover .image-card.active {
-    background: #f8f7f4;
+    background: #fbfaf7;
   }
 
   .image-grid:hover .image-card:hover::before,
   .image-grid:hover .image-card.active::before {
-    inset: 18px;
     opacity: 1;
   }
 
   .image-grid:hover .image-card:hover::after,
   .image-grid:hover .image-card.active::after {
     opacity: 1;
+    transform: scale(1);
   }
 
   .image-grid:hover .image-card:hover img,
   .image-grid:hover .image-card.active img {
-    width: calc(100% - 54px);
-    height: calc(100% - 54px);
+    width: calc(100% - 46px);
+    height: calc(100% - 46px);
     min-height: 0;
     opacity: 1;
     object-fit: contain;
     transform: scale(1);
     filter: none;
+  }
+
+  .image-number {
+    position: absolute;
+    top: 22px;
+    left: 22px;
+    z-index: 4;
+    color: #000000;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 0.05em;
+    opacity: 0;
+    transform: translateY(4px);
+    transition:
+      opacity 0.3s ease,
+      transform 0.3s ease;
+  }
+
+  .image-card:hover .image-number,
+  .image-card.active .image-number {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   .back-to-top {
@@ -659,11 +772,10 @@
   .lightbox-arrow {
     width: 46px;
     height: 46px;
-    border: 1px solid #d8d2cc;
-    border-radius: 50%;
-    background: #ffffff;
+    border: 0;
+    background: transparent;
     color: #000000;
-    font-size: 18px;
+    font-size: 22px;
     cursor: pointer;
   }
 
@@ -676,40 +788,40 @@
   }
 
   @media (min-width: 1025px) {
-    .image-card:nth-child(even) {
-      transform: translateY(42px);
-    }
-
     .image-card:nth-child(4n + 1) {
-      min-height: clamp(570px, 35vw, 640px);
-    }
-
-    .image-card:nth-child(4n + 1) img {
-      min-height: clamp(570px, 35vw, 640px);
+      transform: translateY(0);
     }
 
     .image-card:nth-child(4n + 2) {
-      min-height: clamp(470px, 28vw, 520px);
-    }
-
-    .image-card:nth-child(4n + 2) img {
-      min-height: clamp(470px, 28vw, 520px);
+      transform: translateY(34px);
     }
 
     .image-card:nth-child(4n + 3) {
-      min-height: clamp(490px, 29vw, 540px);
-    }
-
-    .image-card:nth-child(4n + 3) img {
-      min-height: clamp(490px, 29vw, 540px);
+      transform: translateY(8px);
     }
 
     .image-card:nth-child(4n + 4) {
-      min-height: clamp(580px, 36vw, 650px);
+      transform: translateY(42px);
     }
 
-    .image-card:nth-child(4n + 4) img {
-      min-height: clamp(580px, 36vw, 650px);
+    .image-card:nth-child(4n + 1):hover,
+    .image-card:nth-child(4n + 1).active {
+      transform: translateY(-3px);
+    }
+
+    .image-card:nth-child(4n + 2):hover,
+    .image-card:nth-child(4n + 2).active {
+      transform: translateY(31px);
+    }
+
+    .image-card:nth-child(4n + 3):hover,
+    .image-card:nth-child(4n + 3).active {
+      transform: translateY(5px);
+    }
+
+    .image-card:nth-child(4n + 4):hover,
+    .image-card:nth-child(4n + 4).active {
+      transform: translateY(39px);
     }
   }
 
@@ -721,6 +833,10 @@
     .paintings-layout {
       grid-template-columns: clamp(210px, 14vw, 255px) minmax(0, 1fr);
       gap: 14px;
+    }
+
+    .image-card {
+      height: clamp(455px, 27vw, 510px);
     }
   }
 
@@ -735,11 +851,15 @@
     }
 
     .painting-preview h1 {
-      max-width: 285px;
+      max-width: 270px;
     }
 
     .preview-info {
-      max-width: 275px;
+      max-width: 260px;
+    }
+
+    .image-card {
+      height: 510px;
     }
   }
 
@@ -754,38 +874,17 @@
     }
 
     .painting-preview h1 {
-      max-width: 300px;
-      font-size: clamp(14px, 1vw, 16px);
+      max-width: 280px;
+      font-size: clamp(13px, 0.95vw, 15px);
     }
 
     .image-grid {
       column-gap: 22px;
-      row-gap: 30px;
+      row-gap: 32px;
     }
 
-    .image-card,
-    .image-card img {
-      min-height: 500px;
-    }
-
-    .image-card:nth-child(4n + 1),
-    .image-card:nth-child(4n + 1) img {
-      min-height: 570px;
-    }
-
-    .image-card:nth-child(4n + 2),
-    .image-card:nth-child(4n + 2) img {
-      min-height: 470px;
-    }
-
-    .image-card:nth-child(4n + 3),
-    .image-card:nth-child(4n + 3) img {
-      min-height: 490px;
-    }
-
-    .image-card:nth-child(4n + 4),
-    .image-card:nth-child(4n + 4) img {
-      min-height: 580px;
+    .image-card {
+      height: 455px;
     }
   }
 
@@ -848,7 +947,7 @@
 
     .section-button {
       display: block;
-      width: 100%;
+      width: auto;
       min-height: 0;
       margin: 0;
       padding: 0;
@@ -881,7 +980,7 @@
       min-height: 0;
       margin: 0;
       padding: 0;
-      color: #bdbdbd;
+      color: #b8b8b8;
       font-size: 14px;
       font-weight: 700;
       line-height: 1.08;
@@ -895,7 +994,7 @@
 
     .painting-list-number {
       min-width: 22px;
-      font-size: 0.9em;
+      font-size: 0.82em;
     }
 
     .selected-painting-button.active,
@@ -917,7 +1016,7 @@
       width: 100%;
       max-width: 520px;
       margin: 0 0 8px;
-      font-size: clamp(18px, 3.2vw, 25px);
+      font-size: 16px;
       font-weight: 700;
       line-height: 1;
       letter-spacing: 0;
@@ -1025,9 +1124,21 @@
     .image-card:nth-child(4n + 2),
     .image-card:nth-child(4n + 3),
     .image-card:nth-child(4n + 4) {
-      min-height: auto;
-      overflow: visible;
-      background: transparent;
+      height: 440px;
+      min-height: 0;
+      overflow: hidden;
+      background: #eeeeee;
+      transform: none;
+    }
+
+    .image-card:nth-child(4n + 1):hover,
+    .image-card:nth-child(4n + 1).active,
+    .image-card:nth-child(4n + 2):hover,
+    .image-card:nth-child(4n + 2).active,
+    .image-card:nth-child(4n + 3):hover,
+    .image-card:nth-child(4n + 3).active,
+    .image-card:nth-child(4n + 4):hover,
+    .image-card:nth-child(4n + 4).active {
       transform: none;
     }
 
@@ -1037,7 +1148,8 @@
     }
 
     .image-card figure {
-      height: 440px;
+      width: 100%;
+      height: 100%;
       background: #eeeeee;
       overflow: hidden;
     }
@@ -1049,21 +1161,28 @@
     .image-card:nth-child(4n + 4) img {
       width: 100%;
       height: 100%;
-      min-height: 440px;
+      min-height: 0;
+      object-fit: cover;
       transform: none;
     }
 
     .image-grid:hover .image-card img {
-      opacity: 1;
-      filter: none;
+      opacity: 0.42;
+      filter: grayscale(10%) contrast(0.96) brightness(1.02);
     }
 
     .image-grid:hover .image-card:hover img,
     .image-grid:hover .image-card.active img {
-      width: 100%;
-      height: 100%;
-      min-height: 440px;
-      object-fit: cover;
+      width: calc(100% - 36px);
+      height: calc(100% - 36px);
+      min-height: 0;
+      object-fit: contain;
+      opacity: 1;
+      filter: none;
+    }
+
+    .image-number {
+      display: none;
     }
 
     .back-to-top {
@@ -1134,7 +1253,7 @@
 
     .painting-list-number {
       min-width: 18px;
-      font-size: 0.9em;
+      font-size: 0.82em;
     }
 
     .selected-painting-button.active,
@@ -1154,7 +1273,7 @@
 
     .painting-preview h1 {
       margin: 0 0 8px;
-      font-size: clamp(15px, 4.2vw, 20px);
+      font-size: 14px;
       font-weight: 700;
       line-height: 1;
       text-align: left;
@@ -1198,12 +1317,34 @@
       padding: 0 0 calc(145px + env(safe-area-inset-bottom));
     }
 
+    .image-card,
+    .image-card:nth-child(even),
+    .image-card:nth-child(4n + 1),
+    .image-card:nth-child(4n + 2),
+    .image-card:nth-child(4n + 3),
+    .image-card:nth-child(4n + 4) {
+      height: auto;
+      min-height: auto;
+      overflow: visible;
+      background: transparent;
+    }
+
     .image-card figure {
       height: 260px;
+      background: #eeeeee;
+      overflow: hidden;
     }
 
     .image-card img {
+      width: 100%;
+      height: 100%;
       min-height: 260px;
+      object-fit: cover;
+    }
+
+    .image-grid:hover .image-card img {
+      opacity: 1;
+      filter: none;
     }
 
     .image-grid:hover .image-card:hover img,
@@ -1264,7 +1405,7 @@
     }
 
     .painting-preview h1 {
-      font-size: clamp(14px, 4vw, 18px);
+      font-size: 14px;
     }
 
     .selected-painting-links {

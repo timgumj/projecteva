@@ -62,6 +62,25 @@
 <main class="about-page">
   <section class="about-layout" aria-label="About Eva Eichinger">
     <aside class="about-left">
+      <div class="about-links">
+        {#each aboutSections as section, index}
+          <button
+            type="button"
+            class="about-link"
+            class:active={activeSectionId === section.id}
+            onclick={() => selectSection(section.id)}
+          >
+            <span class="about-link-number">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+
+            <span class="about-link-label">
+              <span>{@html section.title}</span>
+            </span>
+          </button>
+        {/each}
+      </div>
+
       <div class="about-text-block">
         {#if activeSection}
           <h1>{@html activeSection.title}</h1>
@@ -73,64 +92,31 @@
           </div>
         {/if}
       </div>
-
-      <div class="about-links">
-        {#each aboutSections as section}
-          <button
-            type="button"
-            class="about-link"
-            class:active={activeSectionId === section.id}
-            onmouseenter={() => selectSection(section.id)}
-            onfocus={() => selectSection(section.id)}
-            onclick={() => selectSection(section.id)}
-          >
-            {@html section.title}
-          </button>
-        {/each}
-      </div>
     </aside>
 
-    <section class="about-right" aria-label="About image and navigation">
-      {#if activeSection?.image || data.featuredImage}
-        <div class="about-image-frame">
-          <img
-            src={activeSection?.image || data.featuredImage}
-            alt={data.pageTitle || "Eva Eichinger"}
+    <section class="about-right" aria-label="About video">
+      <div class="about-video-frame">
+        <video autoplay muted loop playsinline preload="auto">
+          <source
+            src="https://testing.zorawebdesign.com/wp-content/uploads/2026/06/Video-Project-eva.mp4"
+            type="video/mp4"
           />
-        </div>
-      {/if}
-
-      <nav class="about-bottom-nav" aria-label="Page navigation">
-        <a href="/">Home</a>
-        <a href="/about">About</a>
-        <a href="/painting">Paintings</a>
-        <a href="/exhibitions">Exhibitions</a>
-        <a href="/archive">Archive</a>
-        <a href="/contact">Contact</a>
-      </nav>
-
-      <div class="about-socials">
-        <a href="https://www.instagram.com" target="_blank" rel="noreferrer">
-          Instagram
-        </a>
-
-        <a href="https://www.linkedin.com" target="_blank" rel="noreferrer">
-          Linkedin
-        </a>
+        </video>
       </div>
-
-      <a class="about-email" href="mailto:info@evaeichinger.com">
-        info@evaeichinger.com
-      </a>
     </section>
   </section>
 </main>
 
 <style>
+  :global(html),
+  :global(body),
+  .about-page {
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
   :global(body) {
     margin: 0;
     overflow: hidden;
-    font-family: Arial, Helvetica, sans-serif;
     background: #ffffff;
     color: #000000;
   }
@@ -143,9 +129,14 @@
     width: 100%;
     height: 100vh;
     min-height: 100vh;
-    padding: 96px 96px 38px 28px;
+    padding: 96px 56px 38px 28px;
     overflow: hidden;
     background: #ffffff;
+    text-transform: uppercase;
+  }
+
+  .about-page p {
+    text-transform: none;
   }
 
   .about-layout {
@@ -153,8 +144,8 @@
     height: calc(100vh - 150px);
     min-height: 0;
     display: grid;
-    grid-template-columns: 36% minmax(0, 64%);
-    gap: 18px;
+    grid-template-columns: 35% minmax(0, 65%);
+    gap: 8px;
     align-items: stretch;
     overflow: hidden;
   }
@@ -163,17 +154,106 @@
     height: 100%;
     min-height: 0;
     display: grid;
-    grid-template-rows: minmax(0, 1fr) auto;
-    padding-right: 10px;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 34px;
+    padding-right: 4px;
     overflow: hidden;
+  }
+
+  .about-links {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+    padding: 0;
+  }
+
+  .about-link {
+    position: relative;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #b8b8b8;
+    font-size: clamp(12px, 0.78vw, 13px);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    text-align: left;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      color 0.28s ease,
+      opacity 0.28s ease;
+  }
+
+  .about-link.active,
+  .about-link:hover,
+  .about-link:focus {
+    color: #000000;
+  }
+
+  .about-link.active .about-link-label span {
+    animation: aboutTextLift 0.42s ease both;
+  }
+
+  .about-link-number {
+    display: inline-block;
+    min-width: 17px;
+    flex-shrink: 0;
+    color: inherit;
+    font-size: 0.82em;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    opacity: 0.62;
+    transform: translateY(-0.5px);
+  }
+
+  .about-link-label {
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+  }
+
+  .about-link-label span {
+    display: inline-block;
+  }
+
+  @keyframes aboutTextLift {
+    0% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    42% {
+      transform: translateY(-110%);
+      opacity: 0;
+    }
+
+    43% {
+      transform: translateY(110%);
+      opacity: 0;
+    }
+
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
 
   .about-text-block {
     width: 100%;
-    max-width: 430px;
+    max-width: 100%;
     min-height: 0;
     overflow-y: auto;
-    padding-top: 2px;
+    padding-top: 0;
+    padding-right: 18px;
     padding-bottom: 24px;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -181,172 +261,107 @@
 
   .about-text-block::-webkit-scrollbar {
     display: none;
+    width: 0;
+    height: 0;
   }
 
   .about-text-block h1 {
-    margin: 0 0 8px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 0 38px;
     color: #000000;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 15px;
-    font-weight: 900;
-    line-height: 1;
+    font-size: clamp(12px, 0.78vw, 14px);
+    font-weight: 700;
+    line-height: 1.04;
+    letter-spacing: 0.005em;
     text-transform: uppercase;
+    animation: previewTitleIn 0.46s ease both;
+  }
+
+  @keyframes previewTitleIn {
+    0% {
+      opacity: 0;
+      transform: translateY(5px);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .about-section-text {
-    max-width: 420px;
+    width: 100%;
+    max-width: 100%;
   }
 
   .about-section-text p {
-    margin: 0 0 14px;
-    color: #000000;
-    font-size: 15px;
-    font-weight: 400;
-    line-height: 1.25;
+    width: 100%;
+    margin: 0 0 12px;
+    color: #262626;
+    font-size: clamp(11px, 0.66vw, 12px);
+    font-weight: 500;
+    line-height: 1.34;
+    letter-spacing: 0.006em;
+    text-transform: uppercase;
   }
 
   :global(.about-section-text a) {
     color: inherit;
     text-decoration: underline;
     text-decoration-thickness: 1px;
-    text-underline-offset: 4px;
-  }
-
-  .about-links {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    padding-bottom: 0;
-  }
-
-  .about-link {
-    width: fit-content;
-    max-width: 100%;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: #000000;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 14px;
-    font-weight: 800;
-    line-height: 1;
-    text-align: left;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: opacity 0.25s ease;
-  }
-
-  .about-link:hover,
-  .about-link:focus,
-  .about-link.active {
-    opacity: 0.55;
+    text-underline-offset: 2px;
   }
 
   .about-right {
     position: relative;
     height: 100%;
     min-height: 0;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 105px 210px;
-    grid-template-rows: minmax(0, 1fr) auto;
-    gap: 0 16px;
-    align-items: end;
+    display: block;
     overflow: hidden;
   }
-  .about-image-frame {
-    grid-column: 1 / 2;
-    grid-row: 1 / 3;
+
+  .about-video-frame {
     width: 100%;
     height: calc(100% - 26px);
     min-height: 0;
-    align-self: start;
     overflow: hidden;
-    background: #eeeeee;
+    background: #ffffff;
   }
 
-  .about-image-frame img {
+  .about-video-frame video {
     width: 100%;
     height: 100%;
     display: block;
-    object-fit: cover;
-    object-position: left;
-  }
-
-  .about-bottom-nav {
-    grid-column: 1 / 2;
-    grid-row: 2 / 3;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 0;
-  }
-
-  .about-bottom-nav a,
-  .about-socials a,
-  .about-email {
-    width: fit-content;
-    color: #000000;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 0.9;
-    text-decoration: none;
-    text-transform: uppercase;
-    transition: opacity 0.25s ease;
-  }
-
-  .about-bottom-nav a:hover,
-  .about-socials a:hover,
-  .about-email:hover {
-    opacity: 0.55;
-  }
-
-  .about-socials {
-    grid-column: 2 / 3;
-    grid-row: 2 / 3;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    justify-self: start;
-  }
-
-  .about-email {
-    grid-column: 3 / 4;
-    grid-row: 2 / 3;
-    align-self: end;
-    justify-self: start;
-    max-width: 210px;
-    overflow-wrap: normal;
-    white-space: nowrap;
-    text-transform: none;
-
-    transform: translateY(-10px);
+    object-fit: contain;
+    object-position: center;
+    background: #ffffff;
   }
 
   @media (max-width: 1280px) {
     .about-page {
-      padding-right: 82px;
+      padding-right: 48px;
     }
 
     .about-layout {
-      grid-template-columns: 45% minmax(0, 55%);
-      gap: 24px;
+      grid-template-columns: 35% minmax(0, 65%);
+      gap: 8px;
     }
 
-    .about-right {
-      grid-template-columns: minmax(0, 1fr) 96px 128px;
-      gap: 0 14px;
+    .about-left {
+      gap: 32px;
+      padding-right: 4px;
     }
 
-    .about-email {
-      max-width: 128px;
+    .about-text-block h1 {
+      font-size: clamp(13px, 0.95vw, 15px);
     }
   }
 
   @media (max-width: 1024px) {
+    :global(html),
     :global(body) {
+      height: auto;
       overflow-y: auto;
     }
 
@@ -358,80 +373,199 @@
     }
 
     .about-layout {
-      display: block;
+      display: flex;
+      flex-direction: column;
       height: auto;
       min-height: auto;
+      gap: 0;
       overflow: visible;
     }
 
+    .about-right {
+      order: 1;
+      width: 100%;
+      height: auto;
+      min-height: 0;
+      display: block;
+      overflow: visible;
+      margin: 0 0 10px;
+    }
+
+    .about-video-frame {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      min-height: 0;
+      margin: 0;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    .about-video-frame video {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+      object-position: center;
+      background: #ffffff;
+    }
+
     .about-left {
+      order: 2;
+      width: 100%;
       height: auto;
       min-height: auto;
       display: block;
       padding-right: 0;
-      margin-bottom: 34px;
+      margin: 0;
       overflow: visible;
-    }
-
-    .about-text-block {
-      max-width: 620px;
-      overflow: visible;
-      padding-top: 0;
-      padding-bottom: 0;
-      margin-bottom: 32px;
     }
 
     .about-links {
-      flex-direction: row;
-      flex-wrap: wrap;
-      gap: 18px 28px;
-      padding-bottom: 0;
-    }
-
-    .about-right {
-      height: auto;
-      min-height: auto;
-      display: block;
-      overflow: visible;
-    }
-
-    .about-image-frame {
       width: 100%;
-      height: 62vh;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 12px;
+      row-gap: 7px;
+      align-items: start;
+      justify-items: stretch;
+      margin: 0 0 24px;
+      padding: 0;
+      text-align: left;
+    }
+
+    .about-link {
+      display: flex;
+      width: 100%;
+      min-width: 0;
       min-height: 0;
-      margin-bottom: 22px;
-    }
-
-    .about-bottom-nav,
-    .about-socials {
-      margin-bottom: 18px;
-    }
-
-    .about-email {
-      max-width: none;
-      overflow-wrap: normal;
-    }
-
-    .about-bottom-nav a,
-    .about-socials a,
-    .about-email {
+      margin: 0;
+      padding: 0;
+      color: #b8b8b8;
       font-size: 14px;
+      font-weight: 700;
+      line-height: 1.08;
+      text-align: left;
+      white-space: normal;
+      word-break: normal;
+      overflow-wrap: anywhere;
+      transform: none;
+      letter-spacing: 0;
+    }
+
+    .about-link-number {
+      min-width: 22px;
+      font-size: 0.82em;
+    }
+
+    .about-link.active,
+    .about-link:hover,
+    .about-link:focus {
+      color: #000000;
+      transform: none;
+      letter-spacing: 0;
+    }
+
+    .about-text-block {
+      width: 100%;
+      max-width: 100%;
+      overflow: visible;
+      padding: 0;
+      margin: 0;
+    }
+
+    .about-text-block h1 {
+      width: 100%;
+      max-width: 100%;
+      margin: 0 0 8px;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 0;
+      text-align: left;
+    }
+
+    .about-section-text {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .about-section-text p {
+      width: 100%;
+      margin-bottom: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.34;
+    }
+
+    :global(.about-section-text a) {
+      text-underline-offset: 2px;
     }
   }
 
   @media (max-width: 700px) {
     .about-page {
-      padding: 108px 24px 120px;
+      padding: 108px 16px 120px;
     }
 
-    .about-text-block h1,
-    .about-section-text p,
+    .about-video-frame {
+      height: auto;
+      aspect-ratio: 16 / 9;
+    }
+
+    .about-links {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 10px;
+      row-gap: 6px;
+      margin-bottom: 24px;
+    }
+
     .about-link {
-      font-size: 14px;
+      font-size: 12px;
+      line-height: 1.08;
     }
 
-    .about-image-frame {
-      height: 52vh;
+    .about-link-number {
+      min-width: 18px;
+      font-size: 0.82em;
+    }
+
+    .about-text-block h1 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      line-height: 1;
+      text-align: left;
+    }
+
+    .about-section-text p {
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.34;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .about-video-frame {
+      height: auto;
+      aspect-ratio: 16 / 9;
+    }
+
+    .about-links {
+      column-gap: 9px;
+      row-gap: 5px;
+    }
+
+    .about-link {
+      font-size: 11px;
+      line-height: 1.08;
+    }
+
+    .about-link-number {
+      min-width: 17px;
+    }
+
+    .about-text-block h1 {
+      font-size: 14px;
     }
   }
 </style>
