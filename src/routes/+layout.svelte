@@ -5,15 +5,17 @@
   import { onDestroy } from "svelte";
 
   let { children, data } = $props();
+
   let menuOpen = $state(false);
 
-  // --- Data Logic (Retained from your original code) ---
   let aboutItems = $derived(data?.aboutMenuItems || []);
   let paintingItems = $derived(data?.paintingMenuItems || []);
   let exhibitionItems = $derived(data?.exhibitionMenuItems || []);
   let performanceItems = $derived(data?.performanceMenuItems || []);
   let eventItems = $derived(data?.eventMenuItems || []);
   let pathname = $derived(page.url.pathname);
+
+  const desktopSubmenuLabels = ["paintings", "exhibitions", "performances"];
 
   let menuItems = $derived.by(() => [
     { label: "Home", href: "/", children: [] },
@@ -32,15 +34,19 @@
 
   let menuImages = $derived.by(() => {
     const images = [];
+
     [
       ...paintingItems,
       ...exhibitionItems,
+      ...performanceItems,
       ...eventItems,
       ...aboutItems,
     ].forEach((item) => {
-      if (item.featuredImage && images.length < 10)
+      if (item.featuredImage && images.length < 10) {
         images.push(item.featuredImage);
+      }
     });
+
     return images;
   });
 
@@ -53,6 +59,7 @@
     if (pathname.startsWith("/event")) return "Events";
     if (pathname.startsWith("/archive")) return "Archive";
     if (pathname.startsWith("/contact")) return "Contact";
+
     return "Work";
   });
 
@@ -61,9 +68,135 @@
   let isPaintingPage = $derived(pathname.startsWith("/painting"));
   let isArchivePage = $derived(pathname.startsWith("/archive"));
 
-  // --- Optimized Scroll Lock Logic ---
+  function stripHtml(html = "") {
+    return String(html)
+      .replace(/<[^>]*>/g, "")
+      .trim();
+  }
+
+  function decodeHtml(text = "") {
+    return String(text)
+      .replace(/&#8211;/g, "–")
+      .replace(/&#8212;/g, "—")
+      .replace(/&#8217;/g, "'")
+      .replace(/&#8220;/g, '"')
+      .replace(/&#8221;/g, '"')
+      .replace(/&amp;/g, "&");
+  }
+
+  function getItemLabel(item) {
+    const rawTitle =
+      typeof item?.title === "object" ? item?.title?.rendered : item?.title;
+
+    const raw =
+      item?.label ||
+      rawTitle ||
+      item?.name ||
+      item?.slug ||
+      item?.postSlug ||
+      "Untitled";
+
+    return decodeHtml(stripHtml(raw));
+  }
+
+  function getPostId(item) {
+    return (
+      item?.id ||
+      item?.postId ||
+      item?.postID ||
+      item?.wpId ||
+      item?.postSlug ||
+      null
+    );
+  }
+
+  function getYearFromItem(item) {
+    const candidates = [
+      item?.year,
+      item?.categorySlug,
+      item?.category?.slug,
+      item?.slug,
+      item?.postSlug,
+      item?.name,
+      item?.label,
+    ];
+
+    for (const candidate of candidates) {
+      const value = String(candidate || "").trim();
+
+      if (/^\d{4}$/.test(value)) {
+        return value;
+      }
+    }
+
+    if (item?.href) {
+      const hrefMatch = String(item.href).match(/\/exhibitions\/(\d{4})/);
+
+      if (hrefMatch?.[1]) {
+        return hrefMatch[1];
+      }
+    }
+
+    if (item?.date) {
+      const year = String(new Date(item.date).getFullYear());
+
+      if (/^\d{4}$/.test(year)) {
+        return year;
+      }
+    }
+
+    return null;
+  }
+
+  function getSubmenuHref(parentItem, child) {
+    const parentLabel = getItemLabel(parentItem).toLowerCase();
+
+    if (parentLabel === "paintings") {
+      const postId = getPostId(child);
+
+      if (postId) {
+        return `/painting?post=${postId}`;
+      }
+
+      return child?.href || "/painting";
+    }
+
+    if (parentLabel === "performances") {
+      const postId = getPostId(child);
+
+      if (postId) {
+        return `/performances?post=${postId}`;
+      }
+
+      return child?.href || "/performances";
+    }
+
+    if (parentLabel === "exhibitions") {
+      const year = getYearFromItem(child);
+
+      if (year) {
+        return `/exhibitions/${year}`;
+      }
+
+      return child?.href || "/exhibitions";
+    }
+
+    return child?.href || child?.frontendLink || child?.link || "#";
+  }
+
+  function hasDesktopSubmenu(item) {
+    const label = getItemLabel(item).toLowerCase();
+
+    return (
+      desktopSubmenuLabels.includes(label) &&
+      item.children &&
+      item.children.length > 0
+    );
+  }
+
   function updateScrollLock(shouldLock) {
     if (!browser) return;
+
     if (shouldLock) {
       document.body.classList.add("menu-open-lock");
     } else {
@@ -79,17 +212,13 @@
     menuOpen = false;
   }
 
-  // Reactive effect ensures the DOM class always matches the state
   $effect(() => {
     updateScrollLock(menuOpen);
   });
 
-  // Automatically unlock and close menu on navigation
   afterNavigate(() => {
     menuOpen = false;
 
-    // Explicitly remove the class to ensure scrolling works
-    // regardless of the previous transition state
     if (browser) {
       document.body.classList.remove("menu-open-lock");
     }
@@ -204,64 +333,92 @@
       <div class="menu-links-area">
         <div class="menu-grid">
           {#each menuItems as item}
-            <div class="menu-grid-item">
-              <a href={item.href} class="main-menu-link" onclick={closeMenu}>
-                {item.label}
+            <div
+              class="menu-grid-item"
+              class:has-desktop-submenu={hasDesktopSubmenu(item)}
+            >
+              <a
+                href={item.href}
+                class="main-menu-link"
+                class:has-arrow={hasDesktopSubmenu(item)}
+                onclick={closeMenu}
+              >
+                <span>{item.label}</span>
+
+                {#if hasDesktopSubmenu(item)}
+                  <span class="desktop-menu-arrow" aria-hidden="true">→</span>
+                {/if}
               </a>
 
-              {#if item.children && item.children.length > 0}
-                <div class="submenu-grid">
-                  {#each item.children as child}
-                    <a
-                      href={child.href}
-                      class="submenu-link"
-                      onclick={closeMenu}
-                    >
-                      {#if child.featuredImage}
-                        <img
-                          src={child.featuredImage}
-                          alt=""
-                          class="submenu-thumb"
-                          loading="lazy"
-                        />
-                      {/if}
+              {#if hasDesktopSubmenu(item)}
+                <div
+                  class="desktop-submenu-panel"
+                  aria-label={`${item.label} submenu`}
+                >
+                  <div class="desktop-submenu-inner">
+                    <div class="desktop-submenu-kicker">
+                      {item.label}
+                    </div>
 
-                      <span>{child.label}</span>
-                    </a>
-                  {/each}
+                    <div class="desktop-submenu-list">
+                      {#each item.children as child, childIndex}
+                        <a
+                          href={item.label === "Exhibitions"
+                            ? "/exhibitions"
+                            : child.href}
+                          class="desktop-submenu-link"
+                          onclick={closeMenu}
+                        >
+                          <span class="desktop-submenu-number">
+                            {String(childIndex + 1).padStart(2, "0")}
+                          </span>
+
+                          <span class="desktop-submenu-title">
+                            {getItemLabel(child)}
+                          </span>
+
+                          {#if child.featuredImage}
+                            <span class="desktop-submenu-image">
+                              <img
+                                src={child.featuredImage}
+                                alt=""
+                                loading="lazy"
+                              />
+                            </span>
+                          {/if}
+                        </a>
+                      {/each}
+                    </div>
+                  </div>
                 </div>
               {/if}
             </div>
           {/each}
         </div>
-
-        <div class="desktop-social-links">
-          <a href="https://www.linkedin.com" target="_blank" rel="noreferrer">
-            Linkedin
-          </a>
-
-          <a href="https://www.instagram.com" target="_blank" rel="noreferrer">
-            Instagram
-          </a>
-        </div>
       </div>
 
-      <div class="desktop-menu-credit">Website by Zora Web Design</div>
+      <div class="desktop-menu-credit">Designed by Zora WebDesign</div>
+
+      <div class="desktop-social-links">
+        <a
+          href="https://www.instagram.com/eva_eichinger_/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Instagram
+        </a>
+      </div>
 
       <div class="desktop-menu-rights">All rights reserved ©Eva Eichinger</div>
 
       <div class="mobile-menu-extra">
         <div class="mobile-social-icons">
-          <a href="https://www.facebook.com" target="_blank" rel="noreferrer">
-            Facebook
-          </a>
-
-          <a href="https://www.instagram.com" target="_blank" rel="noreferrer">
+          <a
+            href="https://www.instagram.com/eva_eichinger_/"
+            target="_blank"
+            rel="noreferrer"
+          >
             Instagram
-          </a>
-
-          <a href="https://www.linkedin.com" target="_blank" rel="noreferrer">
-            LinkedIn
           </a>
         </div>
 
@@ -291,30 +448,21 @@
     --site-font-family: Arial, Helvetica, sans-serif;
   }
 
-  /* Basic reset */
   :global(html),
   :global(body) {
     margin: 0;
     padding: 0;
     width: 100%;
     min-height: 100%;
-    overflow-x: hidden; /* This is fine, but avoid overflow-y: hidden */
+    overflow-x: hidden;
   }
+
   :global(body) {
     overflow-x: hidden;
   }
 
   :global(body.menu-open-lock) {
     overflow: hidden !important;
-    /* Remove the height line entirely */
-  }
-
-  /* Font inheritance */
-  .site-header,
-  .site-header *,
-  .main-nav,
-  .main-nav * {
-    font-family: var(--site-font-family);
   }
 
   .site-header,
@@ -474,16 +622,21 @@
   }
 
   .main-nav {
-    height: 100dvh; /* Using d-v-h is better for mobile browsers */
-    padding: 76px 24px 24px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    overscroll-behavior: contain; /* This prevents background scrolling */
-    -webkit-overflow-scrolling: touch;
+    position: fixed;
+    inset: 0;
+    z-index: 103;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
     background: #000000;
-    transform: translateX(100%);
+    color: #ffffff;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(100%);
+    transition:
+      transform 0.55s cubic-bezier(0.77, 0, 0.175, 1),
+      opacity 0.4s ease;
   }
 
   .main-nav.open {
@@ -563,18 +716,22 @@
 
   .menu-links-area {
     position: absolute;
-    left: 50vw;
+    left: 44vw;
     top: 50%;
+    z-index: 5;
     transform: translateY(-50%);
   }
 
   .menu-grid {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 0;
   }
 
   .menu-grid-item {
+    position: relative;
+    width: fit-content;
     margin: 0;
     padding: 0;
   }
@@ -585,9 +742,11 @@
   }
 
   .main-menu-link {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
     color: #ffffff;
-    font-size: clamp(48px, 4.2vw, 76px);
+    font-size: clamp(36px, 3.45vw, 64px);
     font-weight: 400;
     line-height: 0.96;
     letter-spacing: -0.022em;
@@ -602,24 +761,176 @@
     transform: translateX(8px);
   }
 
+  .desktop-menu-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.04em;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.32em;
+    font-weight: 300;
+    line-height: 1;
+    transform: translateY(-0.01em);
+    transition:
+      color 0.25s ease,
+      transform 0.25s ease,
+      opacity 0.25s ease;
+  }
+
+  .menu-grid-item.has-desktop-submenu:hover .desktop-menu-arrow,
+  .menu-grid-item.has-desktop-submenu:focus-within .desktop-menu-arrow {
+    color: #ffffff;
+    opacity: 1;
+    transform: translateY(-0.01em) translateX(4px);
+  }
+
+  .desktop-submenu-panel {
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    z-index: 20;
+    width: calc(clamp(64px, 7vw, 124px) + min(31vw, 430px));
+    max-height: 62vh;
+    overflow: visible;
+    padding-left: clamp(64px, 7vw, 124px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-50%);
+    transition:
+      opacity 0.25s ease,
+      visibility 0.25s ease,
+      transform 0.25s ease;
+  }
+
+  .desktop-submenu-inner {
+    width: min(31vw, 430px);
+    max-height: 62vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 2px 0 8px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .desktop-submenu-inner::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  .menu-grid-item.has-desktop-submenu:hover .desktop-submenu-panel,
+  .menu-grid-item.has-desktop-submenu:focus-within .desktop-submenu-panel {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(-50%);
+  }
+
+  .desktop-submenu-kicker {
+    margin: 0 0 18px;
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .desktop-submenu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .desktop-submenu-link {
+    position: relative;
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) 54px;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: clamp(12px, 0.78vw, 14px);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    transition:
+      color 0.24s ease,
+      opacity 0.24s ease,
+      transform 0.24s ease;
+  }
+
+  .desktop-submenu-link:hover,
+  .desktop-submenu-link:focus {
+    color: #ffffff;
+    transform: translateX(5px);
+  }
+
+  .desktop-submenu-number {
+    color: inherit;
+    font-size: 0.82em;
+    font-weight: 700;
+    line-height: 1;
+    opacity: 0.5;
+  }
+
+  .desktop-submenu-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-submenu-image {
+    width: 54px;
+    height: 38px;
+    display: block;
+    overflow: hidden;
+    background: #161616;
+    opacity: 0.7;
+    transition: opacity 0.24s ease;
+  }
+
+  .desktop-submenu-image img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    object-position: center;
+    filter: grayscale(100%);
+  }
+
+  .desktop-submenu-link:hover .desktop-submenu-image,
+  .desktop-submenu-link:focus .desktop-submenu-image {
+    opacity: 1;
+  }
+
   .submenu-grid {
     display: none;
   }
 
   .desktop-social-links {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    margin-top: 72px;
+    position: absolute;
+    left: 50%;
+    bottom: 28px;
+    z-index: 12;
+    display: block;
+    transform: translateX(-50%);
   }
 
   .desktop-social-links a {
     width: fit-content;
     color: #ffffff;
-    font-size: 15px;
-    font-weight: 900;
-    line-height: 0.95;
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1;
     text-transform: uppercase;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
   }
 
   .desktop-menu-credit {
@@ -628,7 +939,7 @@
     bottom: 28px;
     color: #ffffff;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 300;
     line-height: 1;
   }
 
@@ -638,7 +949,7 @@
     bottom: 28px;
     color: #ffffff;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 300;
     line-height: 1;
   }
 
@@ -668,7 +979,9 @@
     .desktop-menu-images,
     .desktop-social-links,
     .desktop-menu-rights,
-    .desktop-menu-credit {
+    .desktop-menu-credit,
+    .desktop-submenu-panel,
+    .desktop-menu-arrow {
       display: none;
     }
 
@@ -719,16 +1032,26 @@
     }
 
     .main-nav {
-      /* Use dvh for mobile reliability */
-      height: 100dvh;
-      /* Force the menu to be fixed so it doesn't move with the body */
       position: fixed;
-      top: 0;
-      left: 0;
+      inset: 0;
       width: 100%;
-      /* Keep these to ensure the menu scrolls but the page doesn't */
+      height: 100vh;
+      height: 100dvh;
+      max-height: 100vh;
+      max-height: 100dvh;
+      padding: 82px 24px 26px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 22px;
       overflow-y: auto;
+      overflow-x: hidden;
       overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      background: #000000;
+      color: #ffffff;
+      transform: translateX(100%);
     }
 
     .main-nav.open {
@@ -744,8 +1067,12 @@
     .menu-grid {
       display: flex;
       flex-direction: column;
-      gap: 11px;
+      gap: 16px;
       overflow: visible;
+    }
+
+    .menu-grid-item {
+      width: auto;
     }
 
     .main-nav a {
@@ -754,9 +1081,9 @@
 
     .main-menu-link {
       color: #ffffff;
-      font-size: 0.82rem;
-      font-weight: 300;
-      line-height: 0.95;
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1;
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
@@ -773,7 +1100,7 @@
 
     .mobile-menu-extra {
       display: block;
-      padding-top: 16px;
+      padding-top: 20px;
       border-top: 1px solid rgba(255, 255, 255, 0.22);
       flex-shrink: 0;
     }
@@ -787,11 +1114,11 @@
 
     .mobile-social-icons a {
       color: #ffffff;
-      font-size: 0.72rem;
-      font-weight: 300;
+      font-size: 0.78rem;
+      font-weight: 500;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      opacity: 0.82;
+      opacity: 0.9;
     }
 
     .mobile-contact-info {
@@ -809,7 +1136,7 @@
       margin: 0;
       color: #ffffff;
       font-size: 0.78rem;
-      font-weight: 400;
+      font-weight: 500;
       letter-spacing: 0.1em;
       text-transform: uppercase;
     }
@@ -828,7 +1155,7 @@
     .mobile-design-credit {
       display: block;
       margin-top: auto;
-      padding-top: 14px;
+      padding-top: 18px;
       color: rgba(255, 255, 255, 0.65);
       font-size: 11px;
       font-weight: 400;
@@ -854,21 +1181,22 @@
     }
 
     .main-nav {
-      padding: 70px 20px 20px;
-      gap: 15px;
+      padding: 76px 20px 22px;
+      gap: 20px;
     }
 
     .menu-grid {
-      gap: 9px;
+      gap: 15px;
     }
 
     .main-menu-link {
-      font-size: 0.78rem;
-      line-height: 0.92;
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1;
     }
 
     .mobile-menu-extra {
-      padding-top: 14px;
+      padding-top: 18px;
     }
 
     .mobile-social-icons {
@@ -877,7 +1205,8 @@
     }
 
     .mobile-social-icons a {
-      font-size: 0.68rem;
+      font-size: 0.76rem;
+      font-weight: 500;
     }
 
     .mobile-contact-info {
@@ -892,28 +1221,29 @@
     }
 
     .mobile-design-credit {
-      padding-top: 10px;
+      padding-top: 14px;
       font-size: 10px;
     }
   }
 
   @media (max-height: 700px) and (max-width: 1024px) {
     .main-nav {
-      padding-top: 64px;
-      gap: 12px;
+      padding-top: 68px;
+      gap: 15px;
     }
 
     .menu-grid {
-      gap: 7px;
+      gap: 12px;
     }
 
     .main-menu-link {
-      font-size: 0.72rem;
-      line-height: 0.9;
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 0.95;
     }
 
     .mobile-menu-extra {
-      padding-top: 10px;
+      padding-top: 12px;
     }
 
     .mobile-social-icons {

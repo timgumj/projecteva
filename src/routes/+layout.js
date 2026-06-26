@@ -25,6 +25,12 @@ function getFeaturedImage(post) {
   );
 }
 
+function getPostYear(post) {
+  if (!post.date) return "";
+
+  return String(new Date(post.date).getFullYear());
+}
+
 function getYearCategory(post, categoriesMap) {
   const postCategories = post.categories || [];
 
@@ -49,43 +55,57 @@ function getYearCategory(post, categoriesMap) {
   return null;
 }
 
+function postHasCategorySlug(post, categoriesMap, targetSlug) {
+  const postCategories = post.categories || [];
+
+  return postCategories.some((categoryId) => {
+    const category = categoriesMap[categoryId];
+
+    if (!category) return false;
+
+    if (category.slug === targetSlug) return true;
+
+    if (category.parent && categoriesMap[category.parent]) {
+      return categoriesMap[category.parent].slug === targetSlug;
+    }
+
+    return false;
+  });
+}
+
 export async function load({ fetch }) {
-  
-
-  
-
   const aboutMenuItems = [
-  {
-    id: 1,
-    label: "About Eva",
-    href: "/about",
-    featuredImage: "",
-  },
-  {
-    id: 2,
-    label: "Buy my arts",
-    href: "/about",
-    featuredImage: "",
-  },
-  {
-    id: 3,
-    label: "Studio",
-    href: "/about",
-    featuredImage: "",
-  },
-  {
-    id: 4,
-    label: "Press",
-    href: "/about",
-    featuredImage: "",
-  },
-  {
-    id: 5,
-    label: "Contact",
-    href: "/about",
-    featuredImage: "",
-  },
-];
+    {
+      id: 1,
+      label: "About Eva",
+      href: "/about",
+      featuredImage: "",
+    },
+    {
+      id: 2,
+      label: "Buy my arts",
+      href: "/about",
+      featuredImage: "",
+    },
+    {
+      id: 3,
+      label: "Studio",
+      href: "/about",
+      featuredImage: "",
+    },
+    {
+      id: 4,
+      label: "Press",
+      href: "/about",
+      featuredImage: "",
+    },
+    {
+      id: 5,
+      label: "Contact",
+      href: "/about",
+      featuredImage: "",
+    },
+  ];
 
   const postsResponse = await fetch(
     `${PUBLIC_WP_API_URL}/posts?_embed&per_page=100`,
@@ -96,6 +116,7 @@ export async function load({ fetch }) {
   );
 
   const posts = postsResponse.ok ? await postsResponse.json() : [];
+
   const categories = categoriesResponse.ok
     ? await categoriesResponse.json()
     : [];
@@ -106,36 +127,63 @@ export async function load({ fetch }) {
     categoriesMap[category.id] = category;
   });
 
-  const exhibitionsCategory = categories.find(
-    (category) => category.slug === "exhibitions",
-  );
-
   const works = posts.map((post) => {
-    const postCategoryIds = post.categories || [];
-
-    const isExhibitionPost = exhibitionsCategory
-      ? postCategoryIds.includes(exhibitionsCategory.id)
-      : false;
-
+    const title = decodeHtml(stripHtml(post.title?.rendered));
     const yearCategory = getYearCategory(post, categoriesMap);
-    const yearSlug = yearCategory ? yearCategory.slug : "";
+    const yearSlug = yearCategory ? yearCategory.slug : getPostYear(post);
+
+    const isPaintingPost = postHasCategorySlug(
+      post,
+      categoriesMap,
+      "paintings",
+    );
+
+    const isExhibitionPost = postHasCategorySlug(
+      post,
+      categoriesMap,
+      "exhibitions",
+    );
+
+    const isPerformancePost = postHasCategorySlug(
+      post,
+      categoriesMap,
+      "performances",
+    );
+
+    let href = "#";
+
+    if (isPaintingPost) {
+      href = `/painting?post=${post.id}`;
+    }
+
+    if (isPerformancePost) {
+      href = `/performances?post=${post.id}`;
+    }
+
+    if (isExhibitionPost) {
+      href = yearSlug ? `/exhibitions/${yearSlug}` : "/exhibitions";
+    }
 
     return {
       id: post.id,
-      label: decodeHtml(stripHtml(post.title?.rendered)),
+      postSlug: String(post.id),
+      label: title,
+      title,
+      year: yearSlug,
       yearSlug,
+      isPaintingPost,
       isExhibitionPost,
+      isPerformancePost,
       featuredImage: getFeaturedImage(post),
-      href: isExhibitionPost
-        ? `/exhibitions?post=${post.id}`
-        : yearSlug
-          ? `/painting?post=${post.id}`
-          : "#",
+      href,
     };
   });
 
-  const paintingMenuItems = works.filter((work) => !work.isExhibitionPost);
+  const paintingMenuItems = works.filter((work) => work.isPaintingPost);
+
   const exhibitionMenuItems = works.filter((work) => work.isExhibitionPost);
+
+  const performanceMenuItems = works.filter((work) => work.isPerformancePost);
 
   const eventsResponse = await fetch(
     `${PUBLIC_WP_API_URL}/events?_embed&per_page=100`,
@@ -157,6 +205,7 @@ export async function load({ fetch }) {
     aboutMenuItems,
     paintingMenuItems,
     exhibitionMenuItems,
+    performanceMenuItems,
     eventMenuItems,
   };
 }
