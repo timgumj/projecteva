@@ -87,6 +87,12 @@
   // Automatically unlock and close menu on navigation
   afterNavigate(() => {
     menuOpen = false;
+
+    // Explicitly remove the class to ensure scrolling works
+    // regardless of the previous transition state
+    if (browser) {
+      document.body.classList.remove("menu-open-lock");
+    }
   });
 
   onDestroy(() => {
