@@ -783,17 +783,26 @@
   }
 
   @media (max-width: 1024px) {
+    :global(html),
+    :global(body) {
+      height: 100%;
+      overflow: hidden;
+    }
+
     .work-page {
+      height: 100vh;
+      height: 100dvh;
       min-height: 100vh;
       min-height: 100dvh;
-      overflow: visible;
-      padding: 118px 24px 90px;
+      overflow: hidden;
+      padding: 118px 24px 0;
     }
 
     .work-layout {
+      height: 100%;
       display: flex;
       flex-direction: column;
-      overflow: visible;
+      overflow: hidden;
     }
 
     .left-column {
@@ -883,13 +892,34 @@
     .work-grid {
       width: 100%;
       min-height: 0;
+      flex: 1 1 auto;
       margin-left: 0;
-      overflow: visible;
+      overflow-y: auto;
+      overflow-x: hidden;
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       align-content: start;
       gap: 18px 12px;
-      padding: 0 0 calc(90px + env(safe-area-inset-bottom));
+      padding: 0 0 calc(150px + env(safe-area-inset-bottom));
+      scrollbar-width: none;
+      scrollbar-color: transparent transparent;
+      -ms-overflow-style: none;
+      overscroll-behavior: contain;
+    }
+
+    .work-grid::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+      display: none;
+      background: transparent;
+    }
+
+    .work-grid::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .work-grid::-webkit-scrollbar-thumb {
+      background: transparent;
     }
 
     .work-card,
@@ -987,10 +1017,12 @@
 
   @media (max-width: 700px) {
     .work-page {
+      height: 100vh;
+      height: 100dvh;
       min-height: 100vh;
       min-height: 100dvh;
-      overflow: visible;
-      padding: 108px 16px 90px;
+      overflow: hidden;
+      padding: 108px 16px 0;
     }
 
     .left-column {
@@ -1040,8 +1072,7 @@
     .work-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 18px 10px;
-      overflow: visible;
-      padding: 0 0 calc(90px + env(safe-area-inset-bottom));
+      padding: 0 0 calc(145px + env(safe-area-inset-bottom));
     }
 
     .work-card,

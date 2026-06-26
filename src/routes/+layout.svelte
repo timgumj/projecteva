@@ -7,13 +7,15 @@
   let { children, data } = $props();
   let menuOpen = $state(false);
 
-  // --- Data Logic (Retained from your original code) ---
   let aboutItems = $derived(data?.aboutMenuItems || []);
   let paintingItems = $derived(data?.paintingMenuItems || []);
   let exhibitionItems = $derived(data?.exhibitionMenuItems || []);
   let performanceItems = $derived(data?.performanceMenuItems || []);
   let eventItems = $derived(data?.eventMenuItems || []);
   let pathname = $derived(page.url.pathname);
+
+  let lockedScrollY = 0;
+  let scrollIsLocked = false;
 
   let menuItems = $derived.by(() => [
     { label: "Home", href: "/", children: [] },
@@ -32,15 +34,18 @@
 
   let menuImages = $derived.by(() => {
     const images = [];
+
     [
       ...paintingItems,
       ...exhibitionItems,
       ...eventItems,
       ...aboutItems,
     ].forEach((item) => {
-      if (item.featuredImage && images.length < 10)
+      if (item.featuredImage && images.length < 10) {
         images.push(item.featuredImage);
+      }
     });
+
     return images;
   });
 
@@ -61,14 +66,54 @@
   let isPaintingPage = $derived(pathname.startsWith("/painting"));
   let isArchivePage = $derived(pathname.startsWith("/archive"));
 
-  // --- Optimized Scroll Lock Logic ---
-  function updateScrollLock(shouldLock) {
-    if (!browser) return;
-    if (shouldLock) {
-      document.body.classList.add("menu-open-lock");
-    } else {
-      document.body.classList.remove("menu-open-lock");
+  function lockPageScroll() {
+    if (!browser || scrollIsLocked) return;
+
+    lockedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    scrollIsLocked = true;
+
+    document.documentElement.classList.add("menu-open-lock");
+    document.body.classList.add("menu-open-lock");
+
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${lockedScrollY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.width = "100%";
+  }
+
+  function unlockPageScroll(restoreScroll = true) {
+    if (!browser || !scrollIsLocked) return;
+
+    scrollIsLocked = false;
+
+    document.documentElement.classList.remove("menu-open-lock");
+    document.body.classList.remove("menu-open-lock");
+
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.left = "";
+    document.body.style.right = "";
+    document.body.style.width = "";
+
+    if (restoreScroll) {
+      window.scrollTo(0, lockedScrollY);
     }
+  }
+
+  function forceUnlockPageScroll() {
+    if (!browser) return;
+
+    scrollIsLocked = false;
+
+    document.documentElement.classList.remove("menu-open-lock");
+    document.body.classList.remove("menu-open-lock");
+
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.left = "";
+    document.body.style.right = "";
+    document.body.style.width = "";
   }
 
   function toggleMenu() {
@@ -79,24 +124,28 @@
     menuOpen = false;
   }
 
-  // Reactive effect ensures the DOM class always matches the state
   $effect(() => {
-    updateScrollLock(menuOpen);
+    if (!browser) return;
+
+    if (menuOpen) {
+      lockPageScroll();
+    } else {
+      unlockPageScroll(true);
+    }
   });
 
-  // Automatically unlock and close menu on navigation
   afterNavigate(() => {
     menuOpen = false;
 
-    // Explicitly remove the class to ensure scrolling works
-    // regardless of the previous transition state
     if (browser) {
-      document.body.classList.remove("menu-open-lock");
+      forceUnlockPageScroll();
     }
   });
 
   onDestroy(() => {
-    updateScrollLock(false);
+    if (browser) {
+      forceUnlockPageScroll();
+    }
   });
 </script>
 
@@ -291,30 +340,19 @@
     --site-font-family: Arial, Helvetica, sans-serif;
   }
 
-  /* Basic reset */
   :global(html),
   :global(body) {
-    min-height: 100%;
     margin: 0;
     padding: 0;
-  }
-
-  :global(body) {
+    width: 100%;
+    min-height: 100%;
     overflow-x: hidden;
   }
 
-  /* This class is added by our script to lock scrolling */
+  :global(html.menu-open-lock),
   :global(body.menu-open-lock) {
     overflow: hidden !important;
-    height: 100vh;
-  }
-
-  /* Font inheritance */
-  .site-header,
-  .site-header *,
-  .main-nav,
-  .main-nav * {
-    font-family: var(--site-font-family);
+    overscroll-behavior: none;
   }
 
   .site-header,
@@ -476,25 +514,31 @@
   .main-nav {
     position: fixed;
     inset: 0;
-    z-index: 103;
+    z-index: 104;
     width: 100%;
     height: 100vh;
     height: 100dvh;
-    overflow: hidden;
+    padding: 76px 24px 24px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     background: #000000;
-    color: #ffffff;
     opacity: 0;
     pointer-events: none;
-    transform: translateY(100%);
+    transform: translateX(100%);
     transition:
-      transform 0.55s cubic-bezier(0.77, 0, 0.175, 1),
-      opacity 0.4s ease;
+      transform 0.35s ease,
+      opacity 0.25s ease;
   }
 
   .main-nav.open {
     opacity: 1;
     pointer-events: auto;
-    transform: translateY(0);
+    transform: translateX(0);
   }
 
   .desktop-menu-brand-block {
@@ -724,26 +768,30 @@
     }
 
     .main-nav {
+      position: fixed;
+      inset: 0;
+      z-index: 104;
+      width: 100%;
       height: 100vh;
       height: 100dvh;
-      max-height: 100vh;
-      max-height: 100dvh;
       padding: 76px 24px 24px;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
       gap: 18px;
       overflow-y: auto;
       overflow-x: hidden;
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
       background: #000000;
-      color: #ffffff;
+      opacity: 0;
+      pointer-events: none;
       transform: translateX(100%);
     }
 
     .main-nav.open {
+      opacity: 1;
+      pointer-events: auto;
       transform: translateX(0);
     }
 

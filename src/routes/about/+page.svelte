@@ -385,7 +385,7 @@
       height: auto;
       min-height: 100vh;
       padding: 118px 24px 110px;
-      overflow: visible;
+      overflow: visible; /* This is the important part for scrolling */
     }
 
     .about-layout {
