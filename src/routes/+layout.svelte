@@ -116,44 +116,6 @@
     );
   }
 
-  function getYearFromItem(item) {
-    const candidates = [
-      item?.year,
-      item?.categorySlug,
-      item?.category?.slug,
-      item?.slug,
-      item?.postSlug,
-      item?.name,
-      item?.label,
-    ];
-
-    for (const candidate of candidates) {
-      const value = String(candidate || "").trim();
-
-      if (/^\d{4}$/.test(value)) {
-        return value;
-      }
-    }
-
-    if (item?.href) {
-      const hrefMatch = String(item.href).match(/\/exhibitions\/(\d{4})/);
-
-      if (hrefMatch?.[1]) {
-        return hrefMatch[1];
-      }
-    }
-
-    if (item?.date) {
-      const year = String(new Date(item.date).getFullYear());
-
-      if (/^\d{4}$/.test(year)) {
-        return year;
-      }
-    }
-
-    return null;
-  }
-
   function getSubmenuHref(parentItem, child) {
     const parentLabel = getItemLabel(parentItem).toLowerCase();
 
@@ -235,174 +197,190 @@
   });
 </script>
 
-{#if !isArchivePage}
-  <header class="site-header" class:menu-is-open={menuOpen}>
-    <a href="/" class="logo" onclick={closeMenu}>Eva Eichinger</a>
+<header
+  class="site-header"
+  class:menu-is-open={menuOpen}
+  class:is-archive-page={isArchivePage}
+>
+  <a href="/" class="logo" onclick={closeMenu}>Eva Eichinger</a>
 
-    <div class="desktop-page-label" aria-label={currentPageLabel}>
-      {#if isHomePage}
-        <lord-icon
-          src="https://cdn.lordicon.com/exymduqj.json"
-          trigger="in"
-          delay="1500"
-          stroke="light"
-          state="in-reveal"
-          colors="primary:#000000,secondary:#000000"
-          style="width:60px;height:60px"
-        >
-        </lord-icon>
-      {:else if isAboutPage}
-        <lord-icon
-          src="https://cdn.lordicon.com/mtuudzxm.json"
-          trigger="in"
-          delay="1500"
-          stroke="light"
-          state="in-reveal"
-          colors="primary:#000000,secondary:#000000"
-          style="width:60px;height:60px"
-        >
-        </lord-icon>
-      {:else if isPaintingPage}
-        <lord-icon
-          src="https://cdn.lordicon.com/snxksidl.json"
-          trigger="hover"
-          stroke="light"
-          colors="primary:#000000,secondary:#000000"
-          style="width:60px;height:60px"
-        >
-        </lord-icon>
-      {:else}
-        {currentPageLabel}
+  <div class="desktop-page-label" aria-label={currentPageLabel}>
+    {#if isHomePage}
+      <lord-icon
+        src="https://cdn.lordicon.com/exymduqj.json"
+        trigger="in"
+        delay="1500"
+        stroke="light"
+        state="in-reveal"
+        colors="primary:#000000,secondary:#000000"
+        style="width:60px;height:60px"
+      >
+      </lord-icon>
+    {:else if isAboutPage}
+      <lord-icon
+        src="https://cdn.lordicon.com/mtuudzxm.json"
+        trigger="in"
+        delay="1500"
+        stroke="light"
+        state="in-reveal"
+        colors="primary:#000000,secondary:#000000"
+        style="width:60px;height:60px"
+      >
+      </lord-icon>
+    {:else if isPaintingPage}
+      <lord-icon
+        src="https://cdn.lordicon.com/snxksidl.json"
+        trigger="hover"
+        stroke="light"
+        colors="primary:#000000,secondary:#000000"
+        style="width:60px;height:60px"
+      >
+      </lord-icon>
+    {:else}
+      {currentPageLabel}
+    {/if}
+  </div>
+
+  <button
+    class="desktop-menu-control"
+    type="button"
+    aria-label={menuOpen ? "Close menu" : "Open menu"}
+    aria-expanded={menuOpen}
+    onclick={toggleMenu}
+  >
+    <span class="desktop-menu-control-text">
+      {menuOpen ? "Close" : "Menu"}
+    </span>
+
+    <span class="desktop-menu-control-icon" aria-hidden="true">
+      <span></span>
+      <span></span>
+    </span>
+  </button>
+
+  <a href="/archive" class="desktop-archive-fixed" onclick={closeMenu}>
+    BIBLO
+  </a>
+
+  <button
+    class="menu-toggle"
+    type="button"
+    aria-label={menuOpen ? "Close menu" : "Open menu"}
+    aria-expanded={menuOpen}
+    onclick={toggleMenu}
+  >
+    <span></span>
+    <span></span>
+  </button>
+
+  <nav class:open={menuOpen} class="main-nav" aria-label="Main navigation">
+    <div class="desktop-menu-brand-block">
+      <div class="desktop-menu-brand">Eva Eichinger</div>
+
+      <div class="desktop-menu-address">
+        <address>
+          Westbahnstraße 27-29<br />
+          1070 Vienna
+        </address>
+
+        <a href="mailto:info@evaeichinger.com">
+          Email: info@evaeichinger.com
+        </a>
+      </div>
+    </div>
+
+    <div class="desktop-menu-images" aria-hidden="true">
+      {#if menuImages.length > 0}
+        {#each menuImages as image}
+          <div class="desktop-menu-image">
+            <img src={image} alt="" loading="lazy" />
+          </div>
+        {/each}
       {/if}
     </div>
 
-    <button
-      class="desktop-menu-control"
-      type="button"
-      aria-label={menuOpen ? "Close menu" : "Open menu"}
-      aria-expanded={menuOpen}
-      onclick={toggleMenu}
-    >
-      <span class="desktop-menu-control-text">
-        {menuOpen ? "Close" : "Menu"}
-      </span>
-
-      <span class="desktop-menu-control-icon" aria-hidden="true">
-        <span></span>
-        <span></span>
-      </span>
-    </button>
-
-    <a href="/archive" class="desktop-archive-fixed" onclick={closeMenu}>
-      BIBLO
-    </a>
-
-    <button
-      class="menu-toggle"
-      type="button"
-      aria-label={menuOpen ? "Close menu" : "Open menu"}
-      aria-expanded={menuOpen}
-      onclick={toggleMenu}
-    >
-      <span></span>
-      <span></span>
-    </button>
-
-    <nav class:open={menuOpen} class="main-nav" aria-label="Main navigation">
-      <div class="desktop-menu-brand-block">
-        <div class="desktop-menu-brand">Eva Eichinger</div>
-
-        <div class="desktop-menu-address">
-          <address>
-            Westbahnstraße 27-29<br />
-            1070 Vienna
-          </address>
-
-          <a href="mailto:info@evaeichinger.com">
-            Email: info@evaeichinger.com
-          </a>
-        </div>
-      </div>
-
-      <div class="desktop-menu-images" aria-hidden="true">
-        {#if menuImages.length > 0}
-          {#each menuImages as image}
-            <div class="desktop-menu-image">
-              <img src={image} alt="" loading="lazy" />
-            </div>
-          {/each}
-        {/if}
-      </div>
-
-      <div class="menu-links-area">
-        <div class="menu-grid">
-          {#each menuItems as item}
-            <div
-              class="menu-grid-item"
-              class:has-desktop-submenu={hasDesktopSubmenu(item)}
-              style={`--submenu-accent-color: ${getSubmenuAccentColor(item)};`}
+    <div class="menu-links-area">
+      <div class="menu-grid">
+        {#each menuItems as item}
+          <div
+            class="menu-grid-item"
+            class:has-desktop-submenu={hasDesktopSubmenu(item)}
+            style={`--submenu-accent-color: ${getSubmenuAccentColor(item)};`}
+          >
+            <a
+              href={item.href}
+              class="main-menu-link"
+              class:has-arrow={hasDesktopSubmenu(item)}
+              onclick={closeMenu}
             >
-              <a
-                href={item.href}
-                class="main-menu-link"
-                class:has-arrow={hasDesktopSubmenu(item)}
-                onclick={closeMenu}
-              >
-                <span>{item.label}</span>
-
-                {#if hasDesktopSubmenu(item)}
-                  <span class="desktop-menu-arrow" aria-hidden="true">→</span>
-                {/if}
-              </a>
+              <span>{item.label}</span>
 
               {#if hasDesktopSubmenu(item)}
-                <div
-                  class="desktop-submenu-panel"
-                  aria-label={`${item.label} submenu`}
-                >
-                  <div class="desktop-submenu-inner">
-                    <div class="desktop-submenu-kicker">
-                      {item.label}
-                    </div>
+                <span class="desktop-menu-arrow" aria-hidden="true">→</span>
+              {/if}
+            </a>
 
-                    <div class="desktop-submenu-list">
-                      {#each item.children as child, childIndex}
-                        <a
-                          href={getSubmenuHref(item, child)}
-                          class="desktop-submenu-link"
-                          onclick={closeMenu}
-                        >
-                          <span class="desktop-submenu-number">
-                            {String(childIndex + 1).padStart(2, "0")}
+            {#if hasDesktopSubmenu(item)}
+              <div
+                class="desktop-submenu-panel"
+                aria-label={`${item.label} submenu`}
+              >
+                <div class="desktop-submenu-inner">
+                  <div class="desktop-submenu-kicker">
+                    {item.label}
+                  </div>
+
+                  <div class="desktop-submenu-list">
+                    {#each item.children as child, childIndex}
+                      <a
+                        href={getSubmenuHref(item, child)}
+                        class="desktop-submenu-link"
+                        onclick={closeMenu}
+                      >
+                        <span class="desktop-submenu-number">
+                          {String(childIndex + 1).padStart(2, "0")}
+                        </span>
+
+                        <span class="desktop-submenu-title">
+                          {getItemLabel(child)}
+                        </span>
+
+                        {#if child.featuredImage}
+                          <span class="desktop-submenu-image">
+                            <img
+                              src={child.featuredImage}
+                              alt=""
+                              loading="lazy"
+                            />
                           </span>
-
-                          <span class="desktop-submenu-title">
-                            {getItemLabel(child)}
-                          </span>
-
-                          {#if child.featuredImage}
-                            <span class="desktop-submenu-image">
-                              <img
-                                src={child.featuredImage}
-                                alt=""
-                                loading="lazy"
-                              />
-                            </span>
-                          {/if}
-                        </a>
-                      {/each}
-                    </div>
+                        {/if}
+                      </a>
+                    {/each}
                   </div>
                 </div>
-              {/if}
-            </div>
-          {/each}
-        </div>
+              </div>
+            {/if}
+          </div>
+        {/each}
       </div>
+    </div>
 
-      <div class="desktop-menu-credit">Designed by Zora WebDesign</div>
+    <div class="desktop-menu-credit">Designed by Zora WebDesign</div>
 
-      <div class="desktop-social-links">
+    <div class="desktop-social-links">
+      <a
+        href="https://www.instagram.com/eva_eichinger_/"
+        target="_blank"
+        rel="noreferrer"
+      >
+        Instagram
+      </a>
+    </div>
+
+    <div class="desktop-menu-rights">All rights reserved ©Eva Eichinger</div>
+
+    <div class="mobile-menu-extra">
+      <div class="mobile-social-icons">
         <a
           href="https://www.instagram.com/eva_eichinger_/"
           target="_blank"
@@ -412,37 +390,23 @@
         </a>
       </div>
 
-      <div class="desktop-menu-rights">All rights reserved ©Eva Eichinger</div>
+      <div class="mobile-contact-info">
+        <p>Contact</p>
 
-      <div class="mobile-menu-extra">
-        <div class="mobile-social-icons">
-          <a
-            href="https://www.instagram.com/eva_eichinger_/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Instagram
-          </a>
-        </div>
+        <a href="mailto:info@evaeichinger.com">
+          Email: info@evaeichinger.com
+        </a>
 
-        <div class="mobile-contact-info">
-          <p>Contact</p>
-
-          <a href="mailto:info@evaeichinger.com">
-            Email: info@evaeichinger.com
-          </a>
-
-          <address>
-            Westbahnstraße 27-29<br />
-            1070 Vienna
-          </address>
-        </div>
+        <address>
+          Westbahnstraße 27-29<br />
+          1070 Vienna
+        </address>
       </div>
+    </div>
 
-      <div class="mobile-design-credit">Designed by zoraDesign</div>
-    </nav>
-  </header>
-{/if}
+    <div class="mobile-design-credit">Designed by zoraDesign</div>
+  </nav>
+</header>
 
 {@render children()}
 
@@ -610,6 +574,17 @@
     transition:
       color 0.25s ease,
       opacity 0.25s ease;
+  }
+
+  .site-header.is-archive-page .logo,
+  .site-header.is-archive-page .desktop-page-label,
+  .site-header.is-archive-page .desktop-menu-control,
+  .site-header.is-archive-page .desktop-archive-fixed {
+    color: #ffffff;
+  }
+
+  .site-header.is-archive-page .desktop-page-label lord-icon {
+    filter: invert(1);
   }
 
   .site-header.menu-is-open .desktop-page-label,
@@ -1000,6 +975,10 @@
       display: none;
     }
 
+    .site-header.is-archive-page .logo {
+      color: #ffffff;
+    }
+
     .site-header.menu-is-open .logo {
       color: #ffffff;
       opacity: 1;
@@ -1032,6 +1011,10 @@
       transition:
         transform 0.25s ease,
         background 0.25s ease;
+    }
+
+    .site-header.is-archive-page .menu-toggle span {
+      background: #ffffff;
     }
 
     .menu-toggle[aria-expanded="true"] span {

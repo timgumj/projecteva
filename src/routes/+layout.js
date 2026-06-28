@@ -11,6 +11,7 @@ function decodeHtml(text = "") {
     .replace(/&#8217;/g, "'")
     .replace(/&#8220;/g, '"')
     .replace(/&#8221;/g, '"')
+    .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&");
 }
 
@@ -74,6 +75,8 @@ function postHasCategorySlug(post, categoriesMap, targetSlug) {
 }
 
 export async function load({ fetch }) {
+  const apiBase = PUBLIC_WP_API_URL?.replace(/\/$/, "");
+
   const aboutMenuItems = [
     {
       id: 1,
@@ -107,105 +110,124 @@ export async function load({ fetch }) {
     },
   ];
 
-  const postsResponse = await fetch(
-    `${PUBLIC_WP_API_URL}/posts?_embed&per_page=100`,
-  );
+  if (!apiBase) {
+    return {
+      aboutMenuItems,
+      paintingMenuItems: [],
+      exhibitionMenuItems: [],
+      performanceMenuItems: [],
+      eventMenuItems: [],
+    };
+  }
 
-  const categoriesResponse = await fetch(
-    `${PUBLIC_WP_API_URL}/categories?per_page=100`,
-  );
+  try {
+    const [postsResponse, categoriesResponse, eventsResponse] =
+      await Promise.all([
+        fetch(`${apiBase}/posts?_embed&per_page=100`),
+        fetch(`${apiBase}/categories?per_page=100`),
+        fetch(`${apiBase}/events?_embed&per_page=100`),
+      ]);
 
-  const posts = postsResponse.ok ? await postsResponse.json() : [];
+    const posts = postsResponse.ok ? await postsResponse.json() : [];
 
-  const categories = categoriesResponse.ok
-    ? await categoriesResponse.json()
-    : [];
+    const categories = categoriesResponse.ok
+      ? await categoriesResponse.json()
+      : [];
 
-  const categoriesMap = {};
+    const eventsData = eventsResponse.ok ? await eventsResponse.json() : [];
 
-  categories.forEach((category) => {
-    categoriesMap[category.id] = category;
-  });
+    const categoriesMap = {};
 
-  const works = posts.map((post) => {
-    const title = decodeHtml(stripHtml(post.title?.rendered));
-    const yearCategory = getYearCategory(post, categoriesMap);
-    const yearSlug = yearCategory ? yearCategory.slug : getPostYear(post);
+    categories.forEach((category) => {
+      categoriesMap[category.id] = category;
+    });
 
-    const isPaintingPost = postHasCategorySlug(
-      post,
-      categoriesMap,
-      "paintings",
+    const works = posts.map((post) => {
+      const title = decodeHtml(stripHtml(post.title?.rendered || ""));
+      const yearCategory = getYearCategory(post, categoriesMap);
+      const yearSlug = yearCategory ? yearCategory.slug : getPostYear(post);
+
+      const isPaintingPost = postHasCategorySlug(
+        post,
+        categoriesMap,
+        "paintings",
+      );
+
+      const isExhibitionPost = postHasCategorySlug(
+        post,
+        categoriesMap,
+        "exhibitions",
+      );
+
+      const isPerformancePost = postHasCategorySlug(
+        post,
+        categoriesMap,
+        "performances",
+      );
+
+      let href = "#";
+
+      if (isPaintingPost) {
+        href = `/painting?post=${post.id}`;
+      }
+
+      if (isPerformancePost) {
+        href = `/performances?post=${post.id}`;
+      }
+
+      if (isExhibitionPost) {
+        href = "/exhibitions";
+      }
+
+      return {
+        id: post.id,
+        postSlug: String(post.id),
+        label: title,
+        title,
+        year: yearSlug,
+        yearSlug,
+        isPaintingPost,
+        isExhibitionPost,
+        isPerformancePost,
+        featuredImage: getFeaturedImage(post),
+        href,
+      };
+    });
+
+    const paintingMenuItems = works.filter((work) => work.isPaintingPost);
+
+    const exhibitionMenuItems = works.filter((work) => work.isExhibitionPost);
+
+    const performanceMenuItems = works.filter(
+      (work) => work.isPerformancePost,
     );
 
-    const isExhibitionPost = postHasCategorySlug(
-      post,
-      categoriesMap,
-      "exhibitions",
-    );
-
-    const isPerformancePost = postHasCategorySlug(
-      post,
-      categoriesMap,
-      "performances",
-    );
-
-    let href = "#";
-
-    if (isPaintingPost) {
-      href = `/painting?post=${post.id}`;
-    }
-
-    if (isPerformancePost) {
-      href = `/performances?post=${post.id}`;
-    }
-
-    if (isExhibitionPost) {
-      href = yearSlug ? `/exhibitions/${yearSlug}` : "/exhibitions";
-    }
+    const eventMenuItems = eventsData.map((event) => ({
+      id: event.id,
+      label: decodeHtml(stripHtml(event.title?.rendered || "")),
+      href: "/event",
+      featuredImage:
+        event.event_details?.featured_image_url ||
+        event._embedded?.["wp:featuredmedia"]?.[0]?.source_url ||
+        "",
+    }));
 
     return {
-      id: post.id,
-      postSlug: String(post.id),
-      label: title,
-      title,
-      year: yearSlug,
-      yearSlug,
-      isPaintingPost,
-      isExhibitionPost,
-      isPerformancePost,
-      featuredImage: getFeaturedImage(post),
-      href,
+      aboutMenuItems,
+      paintingMenuItems,
+      exhibitionMenuItems,
+      performanceMenuItems,
+      eventMenuItems,
     };
-  });
+  } catch (error) {
+    console.error("Global menu data could not be loaded:", error);
 
-  const paintingMenuItems = works.filter((work) => work.isPaintingPost);
-
-  const exhibitionMenuItems = works.filter((work) => work.isExhibitionPost);
-
-  const performanceMenuItems = works.filter((work) => work.isPerformancePost);
-
-  const eventsResponse = await fetch(
-    `${PUBLIC_WP_API_URL}/events?_embed&per_page=100`,
-  );
-
-  const eventsData = eventsResponse.ok ? await eventsResponse.json() : [];
-
-  const eventMenuItems = eventsData.map((event) => ({
-    id: event.id,
-    label: decodeHtml(stripHtml(event.title?.rendered)),
-    href: "/event",
-    featuredImage:
-      event.event_details?.featured_image_url ||
-      event._embedded?.["wp:featuredmedia"]?.[0]?.source_url ||
-      "",
-  }));
-
-  return {
-    aboutMenuItems,
-    paintingMenuItems,
-    exhibitionMenuItems,
-    performanceMenuItems,
-    eventMenuItems,
-  };
+    return {
+      aboutMenuItems,
+      paintingMenuItems: [],
+      exhibitionMenuItems: [],
+      performanceMenuItems: [],
+      eventMenuItems: [],
+    };
+  }
 }
