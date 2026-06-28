@@ -5,6 +5,27 @@
   let activePostId = $state(null);
   let menuOpen = $state(false);
 
+  const archiveCategoryColors = {
+    painting: "#ff5c01",
+    exhibitions: "#24d480",
+    performances: "#ab9bf2",
+  };
+
+  const archiveCategoryKey = [
+    {
+      label: "Paintings",
+      color: "#ff5c01",
+    },
+    {
+      label: "Exhibitions",
+      color: "#24d480",
+    },
+    {
+      label: "Performances",
+      color: "#ab9bf2",
+    },
+  ];
+
   const menuItems = [
     { label: "Home", href: "/" },
     { label: "About", href: "/about" },
@@ -17,7 +38,13 @@
   ];
 
   let activePost = $derived(
-    posts.find((post) => post.id === activePostId) || posts[0],
+    posts.find((post) => post.id === activePostId) || null,
+  );
+
+  let activePostTitleColor = $derived(getArchiveTitleColor(activePost));
+
+  let archiveCenterTitle = $derived(
+    activePost ? cleanText(activePost?.title) : "VIEW ALL MY WORKS",
   );
 
   let menuImages = $derived(() => {
@@ -48,12 +75,12 @@
 
   function getPostCategorySlug(post) {
     const raw =
-      post.categorySlug ||
-      post.category ||
-      post.groupSlug ||
-      post.group ||
-      post.type ||
-      post.postType ||
+      post?.categorySlug ||
+      post?.category ||
+      post?.groupSlug ||
+      post?.group ||
+      post?.type ||
+      post?.postType ||
       "";
 
     const slug = slugify(raw);
@@ -65,6 +92,12 @@
       return "performances";
 
     return slug;
+  }
+
+  function getArchiveTitleColor(post) {
+    const categorySlug = getPostCategorySlug(post);
+
+    return archiveCategoryColors[categorySlug] || "#ffffff";
   }
 
   function getArchivePostLink(post) {
@@ -93,7 +126,15 @@
     return `/archive?post=${post.id}`;
   }
 
+  function canUseDesktopHover() {
+    if (typeof window === "undefined") return false;
+
+    return window.matchMedia("(min-width: 1025px)").matches;
+  }
+
   function selectPost(post) {
+    if (!canUseDesktopHover()) return;
+
     activePostId = post.id;
   }
 
@@ -257,9 +298,27 @@
 
   <section class="archive-hero" aria-label="Archive">
     <div class="archive-fixed-top">
-      <div class="archive-center-title">
+      <div
+        class="archive-center-title"
+        class:has-active-post={activePost}
+        style={`--archive-title-color: ${activePost ? activePostTitleColor : "#ffffff"};`}
+      >
         <span>COLLECTION OF MY WORKS</span>
-        <strong>{cleanText(activePost?.title) || "ARCHIVE"}</strong>
+
+        <strong>{archiveCenterTitle}</strong>
+
+        <div class="archive-category-key" aria-label="Archive category key">
+          {#each archiveCategoryKey as item}
+            <div class="archive-key-item">
+              <span
+                class="archive-key-square"
+                style={`--key-color: ${item.color};`}
+              ></span>
+
+              <span class="archive-key-label">{item.label}</span>
+            </div>
+          {/each}
+        </div>
       </div>
 
       {#if activePost?.featuredImage}
@@ -279,6 +338,7 @@
             href={getArchivePostLink(post)}
             class={`archive-item archive-position-${index + 1}`}
             class:active={activePost?.id === post.id}
+            style={`--archive-title-color: ${getArchiveTitleColor(post)};`}
             onmouseenter={() => selectPost(post)}
             onfocus={() => selectPost(post)}
           >
@@ -656,20 +716,23 @@
   }
 
   .archive-center-title {
+    --archive-title-color: #ffffff;
+
     position: fixed;
     left: 50%;
     top: 50%;
     z-index: 5;
-    width: min(560px, 52vw);
+    width: min(620px, 56vw);
     color: #ffffff;
     text-align: center;
     transform: translate(-50%, -50%);
     pointer-events: none;
   }
 
-  .archive-center-title span {
+  .archive-center-title > span {
     display: block;
     padding-bottom: 10px;
+    color: #ffffff;
     font-size: 12px;
     font-weight: 400;
     line-height: 0.9;
@@ -679,11 +742,53 @@
 
   .archive-center-title strong {
     display: block;
+    color: var(--archive-title-color);
     font-family: Georgia, "Times New Roman", serif;
     font-size: 40px;
     font-weight: 400;
     line-height: 0.9;
     letter-spacing: -0.075em;
+    text-transform: uppercase;
+    transition: color 0.3s ease;
+  }
+
+  .archive-center-title:not(.has-active-post) strong {
+    color: #ffffff;
+  }
+
+  .archive-category-key {
+    width: 100%;
+    margin: 18px auto 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: rgba(255, 255, 255, 0.74);
+  }
+
+  .archive-key-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1;
+  }
+
+  .archive-key-square {
+    width: 8px;
+    height: 8px;
+    display: block;
+    background: var(--key-color);
+    flex: 0 0 8px;
+  }
+
+  .archive-key-label {
+    display: block;
+    padding: 0;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
   }
 
@@ -695,6 +800,8 @@
   }
 
   .archive-item {
+    --archive-title-color: #ffffff;
+
     position: absolute;
     z-index: 4;
     width: min(330px, 21vw);
@@ -717,11 +824,18 @@
   .archive-item strong {
     display: block;
     margin: 0 0 6px;
-    color: inherit;
+    color: var(--archive-title-color);
     font-size: 12px;
     font-weight: 400;
     line-height: 1.15;
     text-transform: uppercase;
+    transition: color 0.3s ease;
+  }
+
+  .archive-item:hover strong,
+  .archive-item:focus strong,
+  .archive-item.active strong {
+    color: var(--archive-title-color);
   }
 
   .archive-item span {
@@ -935,7 +1049,7 @@
       transform: none;
     }
 
-    .archive-center-title span {
+    .archive-center-title > span {
       padding-bottom: 8px;
       font-size: 12px;
       line-height: 1;
@@ -946,6 +1060,10 @@
       font-size: clamp(18px, 3.2vw, 25px);
       line-height: 1;
       letter-spacing: -0.055em;
+    }
+
+    .archive-category-key {
+      display: none;
     }
 
     .active-image-preview {
@@ -1037,6 +1155,12 @@
     .archive-item:hover,
     .archive-item:focus {
       color: #ffffff;
+    }
+
+    .archive-item.active strong,
+    .archive-item:hover strong,
+    .archive-item:focus strong {
+      color: var(--archive-title-color);
     }
 
     .main-nav {

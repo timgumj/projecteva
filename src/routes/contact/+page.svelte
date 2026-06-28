@@ -106,7 +106,18 @@
   <section class="contact-layout" aria-label="Contact">
     <aside class="left-column" aria-label="Studio information">
       <div class="contact-top">
-        <span>CONTACT</span>
+        <span class="contact-top-icon" aria-hidden="true">
+          <lord-icon
+            src="https://cdn.lordicon.com/onmwuuox.json"
+            trigger="hover"
+            stroke="light"
+            colors="primary:#000000,secondary:#000000"
+            style="width:64px;height:64px"
+          >
+          </lord-icon>
+        </span>
+
+        <span class="contact-top-text">CONTACT</span>
       </div>
 
       <div class="contact-preview">
@@ -114,10 +125,9 @@
 
         <div class="preview-bottom">
           <div class="preview-info">
-            <strong>{contact.name}</strong>
+            <strong>Studio visits by appointment</strong>
 
             <p>
-              Studio visits by appointment.<br />
               Monday – Friday: 09:00 – 17:00<br />
               Saturday – Sunday: closed
             </p>
@@ -128,35 +138,6 @@
 
     <section class="right-column" aria-label="Contact content">
       <div class="contact-grid" bind:this={contactScrollElement}>
-        <article class="contact-card address-card">
-          <span class="card-number">01</span>
-
-          <span class="contact-icon" aria-hidden="true">
-            <lord-icon
-              src="https://cdn.lordicon.com/onmwuuox.json"
-              trigger="hover"
-              stroke="light"
-              colors="primary:#000000,secondary:#000000"
-              style="width:72px;height:72px"
-            >
-            </lord-icon>
-          </span>
-
-          <div class="contact-card-content">
-            <strong>ADDRESS</strong>
-            <p>{contactAddress}</p>
-          </div>
-
-          <div class="map-frame" aria-label="Google map">
-            <iframe
-              src={mapEmbedUrl}
-              title="Studio location map"
-              loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"
-            ></iframe>
-          </div>
-        </article>
-
         <article class="contact-card">
           <span class="card-number">02</span>
 
@@ -175,7 +156,7 @@
             <strong>EMAIL</strong>
 
             <p>
-              <a href={`mailto:${contactEmail}`}>
+              <a class="lowercase-contact-link" href={`mailto:${contactEmail}`}>
                 {contactEmail}
               </a>
             </p>
@@ -200,7 +181,12 @@
             <strong>INSTAGRAM</strong>
 
             <p>
-              <a href={contact.instagramUrl} target="_blank" rel="noreferrer">
+              <a
+                class="lowercase-contact-link"
+                href={contact.instagramUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
                 {contactInstagram}
               </a>
             </p>
@@ -225,7 +211,12 @@
             <strong>WEBSITE</strong>
 
             <p>
-              <a href={contact.websiteUrl} target="_blank" rel="noreferrer">
+              <a
+                class="lowercase-contact-link"
+                href={contact.websiteUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
                 {contactWebsite}
               </a>
             </p>
@@ -237,7 +228,7 @@
 
           <span class="contact-icon" aria-hidden="true">
             <lord-icon
-              src="https://cdn.lordicon.com/warimioc.json"
+              src="https://cdn.lordicon.com/onmwuuox.json"
               trigger="hover"
               stroke="light"
               colors="primary:#000000,secondary:#000000"
@@ -247,13 +238,9 @@
           </span>
 
           <div class="contact-card-content">
-            <strong>OPENING HOURS</strong>
+            <strong>STUDIO ADDRESS</strong>
 
-            <p>
-              Monday – Friday<br />
-              09:00 – 17:00<br />
-              Saturday – Sunday closed
-            </p>
+            <p>{contactAddress}</p>
           </div>
         </article>
 
@@ -288,6 +275,22 @@
             {/if}
           </div>
         </form>
+
+        <article class="contact-card map-card" aria-label="Studio map">
+          <div class="map-frame" aria-label="Google map">
+            <iframe
+              src={mapEmbedUrl}
+              title="Studio location map"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+            ></iframe>
+          </div>
+
+          <div class="map-address">
+            <strong>ADDRESS</strong>
+            <p>{contactAddress}</p>
+          </div>
+        </article>
 
         <button type="button" class="back-to-top" onclick={scrollBackToTop}>
           BACK TO TOP
@@ -330,8 +333,9 @@
   }
 
   .contact-page {
-    --map-height: 150px;
+    --map-height: 140px;
     --contact-card-height: calc(var(--map-height) + 106px);
+    --contact-card-bg: #fdfdfc;
 
     width: 100%;
     height: 100vh;
@@ -377,9 +381,25 @@
 
   .contact-top {
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
   }
 
-  .contact-top span {
+  .contact-top-icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .contact-top-icon lord-icon {
+    display: block;
+  }
+
+  .contact-top-text {
     display: inline-block;
     color: #000000;
     font-size: clamp(12px, 0.78vw, 13px);
@@ -482,7 +502,7 @@
     justify-content: flex-end;
     padding: 16px;
     color: #000000;
-    background: #f8f8f6;
+    background: var(--contact-card-bg);
     text-decoration: none;
     isolation: isolate;
     transition:
@@ -497,10 +517,10 @@
     z-index: 1;
     background: linear-gradient(
         to bottom,
-        rgba(255, 255, 255, 0.22),
+        rgba(255, 255, 255, 0.18),
         rgba(255, 255, 255, 0) 35%
       ),
-      linear-gradient(to top, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0) 46%);
+      linear-gradient(to top, rgba(0, 0, 0, 0.025), rgba(0, 0, 0, 0) 46%);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.35s ease;
@@ -511,7 +531,7 @@
     position: absolute;
     inset: 12px;
     z-index: 2;
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.04);
     opacity: 0;
     pointer-events: none;
     transform: scale(0.985);
@@ -522,7 +542,7 @@
 
   .contact-card:hover,
   .contact-card:focus-within {
-    background: #fbfaf7;
+    background: #ffffff;
   }
 
   .contact-card:hover::before,
@@ -531,6 +551,68 @@
   .contact-card:focus-within::after {
     opacity: 1;
     transform: scale(1);
+  }
+
+  .map-card {
+    padding: 0;
+    background: var(--contact-card-bg);
+  }
+
+  .map-card::before,
+  .map-card::after {
+    display: none;
+  }
+
+  .map-frame {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--contact-card-bg);
+  }
+
+  .map-frame iframe {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border: 0;
+    filter: grayscale(100%) contrast(0.94) brightness(1.04);
+    pointer-events: none;
+  }
+
+  .map-address {
+    position: absolute;
+    left: 16px;
+    bottom: 16px;
+    z-index: 4;
+    max-width: calc(100% - 32px);
+    padding: 10px 12px;
+    background: rgba(253, 253, 252, 0.88);
+    backdrop-filter: blur(4px);
+  }
+
+  .map-address strong {
+    display: block;
+    margin: 0 0 6px;
+    color: #000000;
+    font-size: clamp(11px, 0.68vw, 12px);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.012em;
+    text-transform: uppercase;
+  }
+
+  .map-address p {
+    margin: 0;
+    color: #000000;
+    font-size: clamp(12px, 0.95vw, 15px);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
   }
 
   .card-number {
@@ -572,10 +654,6 @@
     padding-right: 80px;
   }
 
-  .address-card .contact-card-content {
-    padding-right: 86px;
-  }
-
   .contact-card-content strong {
     display: block;
     margin: 0 0 8px;
@@ -592,7 +670,7 @@
     color: #000000;
     font-size: clamp(12px, 0.95vw, 15px);
     font-weight: 700;
-    line-height: 1.08;
+    line-height: 1.28;
     letter-spacing: -0.01em;
     text-transform: uppercase;
     overflow-wrap: anywhere;
@@ -611,23 +689,17 @@
     opacity: 0.55;
   }
 
-  .map-frame {
-    position: relative;
-    z-index: 4;
-    width: 100%;
-    height: var(--map-height);
-    margin-top: 14px;
-    overflow: hidden;
-    background: #e5e5e5;
-  }
-
-  .map-frame iframe {
-    width: 100%;
-    height: 100%;
-    display: block;
-    border: 0;
-    filter: grayscale(100%);
-    pointer-events: none;
+  .lowercase-contact-link {
+    display: inline;
+    color: #000000;
+    font-size: inherit;
+    line-height: 1.4;
+    text-transform: lowercase;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
   }
 
   .newsletter-input-row {
@@ -789,10 +861,21 @@
     .contact-top {
       width: 100%;
       margin-bottom: 20px;
+      align-items: flex-start;
       text-align: left;
     }
 
-    .contact-top span {
+    .contact-top-icon {
+      width: 58px;
+      height: 58px;
+    }
+
+    .contact-top-icon lord-icon {
+      width: 58px !important;
+      height: 58px !important;
+    }
+
+    .contact-top-text {
       font-size: 18px;
       font-weight: 700;
       line-height: 1;
@@ -853,7 +936,7 @@
 
     .contact-card {
       padding: 14px;
-      background: #eeeeee;
+      background: var(--contact-card-bg);
     }
 
     .contact-card::before,
@@ -879,8 +962,7 @@
       height: 56px !important;
     }
 
-    .contact-card-content,
-    .address-card .contact-card-content {
+    .contact-card-content {
       padding-right: 58px;
     }
 
@@ -890,11 +972,29 @@
 
     .contact-card-content p {
       font-size: 12px;
-      line-height: 1.12;
+      line-height: 1.34;
     }
 
-    .map-frame {
-      margin-top: 10px;
+    .lowercase-contact-link {
+      font-size: 11px;
+      line-height: 1.45;
+      text-underline-offset: 3px;
+    }
+
+    .map-address {
+      left: 14px;
+      bottom: 14px;
+      max-width: calc(100% - 28px);
+      padding: 9px 10px;
+    }
+
+    .map-address strong {
+      font-size: 12px;
+    }
+
+    .map-address p {
+      font-size: 12px;
+      line-height: 1.12;
     }
 
     .newsletter-input-row {
@@ -928,10 +1028,21 @@
 
     .contact-top {
       margin-bottom: 16px;
+      align-items: flex-start;
       text-align: left;
     }
 
-    .contact-top span {
+    .contact-top-icon {
+      width: 52px;
+      height: 52px;
+    }
+
+    .contact-top-icon lord-icon {
+      width: 52px !important;
+      height: 52px !important;
+    }
+
+    .contact-top-text {
       font-size: 17px;
     }
 
@@ -959,7 +1070,7 @@
 
     .contact-card {
       padding: 12px;
-      background: #eeeeee;
+      background: var(--contact-card-bg);
     }
 
     .card-number {
@@ -980,8 +1091,7 @@
       height: 48px !important;
     }
 
-    .contact-card-content,
-    .address-card .contact-card-content {
+    .contact-card-content {
       padding-right: 44px;
     }
 
@@ -992,11 +1102,30 @@
 
     .contact-card-content p {
       font-size: 11px;
-      line-height: 1.1;
+      line-height: 1.35;
     }
 
-    .map-frame {
-      margin-top: 8px;
+    .lowercase-contact-link {
+      font-size: 10px;
+      line-height: 1.5;
+      text-underline-offset: 3px;
+    }
+
+    .map-address {
+      left: 12px;
+      bottom: 12px;
+      max-width: calc(100% - 24px);
+      padding: 8px 9px;
+    }
+
+    .map-address strong {
+      margin-bottom: 6px;
+      font-size: 11px;
+    }
+
+    .map-address p {
+      font-size: 11px;
+      line-height: 1.1;
     }
 
     .newsletter-input-row {
@@ -1045,7 +1174,17 @@
       margin-bottom: 14px;
     }
 
-    .contact-top span {
+    .contact-top-icon {
+      width: 48px;
+      height: 48px;
+    }
+
+    .contact-top-icon lord-icon {
+      width: 48px !important;
+      height: 48px !important;
+    }
+
+    .contact-top-text {
       font-size: 16px;
     }
 
@@ -1063,12 +1202,29 @@
       height: 42px !important;
     }
 
-    .contact-card-content,
-    .address-card .contact-card-content {
+    .contact-card-content {
       padding-right: 36px;
     }
 
     .contact-card-content p {
+      font-size: 10px;
+      line-height: 1.35;
+    }
+
+    .lowercase-contact-link {
+      font-size: 9px;
+      line-height: 1.55;
+      text-underline-offset: 3px;
+    }
+
+    .map-address {
+      left: 11px;
+      bottom: 11px;
+      max-width: calc(100% - 22px);
+      padding: 7px 8px;
+    }
+
+    .map-address p {
       font-size: 10px;
     }
   }
