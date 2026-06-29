@@ -21,7 +21,30 @@ function getFirstH2(post) {
   return match ? decodeHtml(stripHtml(match[1])) : "";
 }
 
-function extractGalleryImages(post) {
+function getFeaturedImage(post) {
+  const media = post._embedded?.["wp:featuredmedia"]?.[0];
+
+  if (!media) return null;
+
+  const src =
+    media.media_details?.sizes?.large?.source_url ||
+    media.media_details?.sizes?.medium_large?.source_url ||
+    media.media_details?.sizes?.full?.source_url ||
+    media.source_url ||
+    "";
+
+  if (!src) return null;
+
+  return {
+    src,
+    alt:
+      decodeHtml(media.alt_text || "") ||
+      decodeHtml(stripHtml(post.title?.rendered || "")) ||
+      "Painting image"
+  };
+}
+
+function extractGalleryImages(post, featuredImage = null) {
   const html = post.content?.rendered || "";
   const images = [];
   const regex = /<img[^>]+src=["']([^"']+)["'][^>]*>/g;
@@ -35,9 +58,12 @@ function extractGalleryImages(post) {
     const altMatch = imgTag.match(/alt=["']([^"']*)["']/);
     const alt = altMatch
       ? decodeHtml(altMatch[1])
-      : decodeHtml(stripHtml(post.title?.rendered));
+      : decodeHtml(stripHtml(post.title?.rendered || ""));
 
-    if (src && !images.some((image) => image.src === src)) {
+    const isDuplicate = images.some((image) => image.src === src);
+    const isFeaturedImage = featuredImage?.src && src === featuredImage.src;
+
+    if (src && !isDuplicate && !isFeaturedImage) {
       images.push({
         src,
         alt
@@ -73,23 +99,25 @@ export async function load({ fetch, url }) {
   }
 
   const postsResponse = await fetch(
-    `${PUBLIC_WP_API_URL}/posts?_embed&per_page=100&categories=${paintingsCategory.id}`
+    `${PUBLIC_WP_API_URL}/posts?_embed=1&per_page=100&categories=${paintingsCategory.id}`
   );
 
   const posts = await postsResponse.json();
 
   const paintings = posts.map((post) => {
     const year = getPostYear(post);
-    const title = decodeHtml(stripHtml(post.title?.rendered));
+    const title = decodeHtml(stripHtml(post.title?.rendered || ""));
     const info = getFirstH2(post);
-    const images = extractGalleryImages(post);
+    const featuredImage = getFeaturedImage(post);
+    const images = extractGalleryImages(post, featuredImage);
 
     return {
       id: post.id,
       year,
-      postSlug: String(post.id),
+      postSlug: post.slug,
       title,
       info,
+      featuredImage,
       images
     };
   });

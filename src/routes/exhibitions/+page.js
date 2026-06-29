@@ -40,12 +40,23 @@ function extractGalleryImages(post) {
     if (src && !images.some((image) => image.src === src)) {
       images.push({
         src,
-        alt
+        alt,
       });
     }
   }
 
   return images;
+}
+
+function getFeaturedImage(post) {
+  return (
+    post._embedded?.["wp:featuredmedia"]?.[0]?.media_details?.sizes?.large
+      ?.source_url ||
+    post._embedded?.["wp:featuredmedia"]?.[0]?.media_details?.sizes?.medium_large
+      ?.source_url ||
+    post._embedded?.["wp:featuredmedia"]?.[0]?.source_url ||
+    ""
+  );
 }
 
 function getPostYear(post) {
@@ -54,47 +65,66 @@ function getPostYear(post) {
   return String(new Date(post.date).getFullYear());
 }
 
-export async function load({ fetch, url })  {
+export async function load({ fetch, url }) {
   const categoriesResponse = await fetch(
-    `${PUBLIC_WP_API_URL}/categories?per_page=100`
+    `${PUBLIC_WP_API_URL}/categories?per_page=100`,
   );
+
+  if (!categoriesResponse.ok) {
+    return {
+      exhibitions: [],
+      requestedPostId: null,
+    };
+  }
 
   const categories = await categoriesResponse.json();
 
   const exhibitionsCategory = categories.find(
-    (category) => category.slug === "exhibitions"
+    (category) => category.slug === "exhibitions",
   );
 
   if (!exhibitionsCategory) {
     return {
-      selectedExhibitions: []
+      exhibitions: [],
+      requestedPostId: null,
     };
   }
 
   const postsResponse = await fetch(
-    `${PUBLIC_WP_API_URL}/posts?_embed&per_page=100&categories=${exhibitionsCategory.id}`
+    `${PUBLIC_WP_API_URL}/posts?_embed&per_page=100&categories=${exhibitionsCategory.id}`,
   );
+
+  if (!postsResponse.ok) {
+    return {
+      exhibitions: [],
+      requestedPostId: null,
+    };
+  }
 
   const posts = await postsResponse.json();
 
-  const selectedExhibitions = posts.map((post) => {
+  const exhibitions = posts.map((post) => {
     const year = getPostYear(post);
     const title = decodeHtml(stripHtml(post.title?.rendered));
     const info = getFirstH2(post);
     const images = extractGalleryImages(post);
+    const featuredImage = getFeaturedImage(post);
 
     return {
       id: post.id,
+      postSlug: post.slug,
+      slug: post.slug,
       year,
       yearSlug: String(post.id),
       title,
       info,
-      images
+      images,
+      featuredImage,
     };
   });
 
   return {
-  selectedExhibitions,
-  requestedPostId: Number(url.searchParams.get("post")) || null
-};
+    exhibitions,
+    requestedPostId: Number(url.searchParams.get("post")) || null,
+  };
 }
