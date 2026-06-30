@@ -241,6 +241,12 @@
     document.body.style.touchAction = "";
   }
 
+  function isDesktopViewport() {
+    if (!browser) return false;
+
+    return window.matchMedia("(min-width: 1025px)").matches;
+  }
+
   function scrollToWorks() {
     if (!browser || !workSectionElement) return;
 
@@ -253,11 +259,73 @@
   }
 
   function scrollGridToTop() {
+    if (!browser) return;
+
+    if (!isDesktopViewport() && workSectionElement) {
+      const top =
+        workSectionElement.getBoundingClientRect().top + window.scrollY;
+
+      window.scrollTo({
+        top,
+        behavior: "smooth",
+      });
+
+      return;
+    }
+
     if (workGridElement) {
       workGridElement.scrollTo({
         top: 0,
         behavior: "smooth",
       });
+    }
+  }
+
+  function getGridMaxScroll() {
+    if (!workGridElement) return 0;
+
+    return Math.max(
+      0,
+      workGridElement.scrollHeight - workGridElement.clientHeight,
+    );
+  }
+
+  function isWorkSectionReadyForInternalScroll() {
+    if (!browser || !workSectionElement || !isDesktopViewport()) return false;
+
+    const rect = workSectionElement.getBoundingClientRect();
+    const viewportHeight =
+      window.innerHeight || document.documentElement.clientHeight;
+
+    return rect.top <= 4 && rect.bottom >= viewportHeight - 4;
+  }
+
+  function canRouteGridScroll(deltaY) {
+    if (!workGridElement) return false;
+
+    const maxScroll = getGridMaxScroll();
+
+    if (maxScroll <= 1) return false;
+
+    if (deltaY > 0) {
+      return workGridElement.scrollTop < maxScroll - 1;
+    }
+
+    if (deltaY < 0) {
+      return workGridElement.scrollTop > 1;
+    }
+
+    return false;
+  }
+
+  function routeWorkSectionWheel(event) {
+    if (!isWorkSectionReadyForInternalScroll()) return;
+
+    const deltaY = event.deltaY;
+
+    if (canRouteGridScroll(deltaY)) {
+      event.preventDefault();
+      workGridElement.scrollTop += deltaY;
     }
   }
 
@@ -306,8 +374,20 @@
       unlockPageLocks();
     }, 0);
 
+    const wheelHandler = (event) => routeWorkSectionWheel(event);
+
+    if (workSectionElement) {
+      workSectionElement.addEventListener("wheel", wheelHandler, {
+        passive: false,
+      });
+    }
+
     return () => {
       unlockPageLocks();
+
+      if (workSectionElement) {
+        workSectionElement.removeEventListener("wheel", wheelHandler);
+      }
     };
   });
 </script>
@@ -1290,14 +1370,11 @@
   }
 
   @media (max-width: 1024px) {
-    :global(html) {
-      scroll-behavior: smooth;
-    }
-
     .announcement-hero {
-      height: 100svh;
-      min-height: 100svh;
-      padding: 112px 24px 64px;
+      height: calc(100svh - 118px);
+      min-height: calc(100svh - 118px);
+      margin-top: 118px;
+      padding: 24px 24px 64px;
       background-position: center;
     }
 
@@ -1311,7 +1388,7 @@
     }
 
     .hero-side-link-right {
-      right: 68px;
+      right: 24px;
     }
 
     .hero-center {
@@ -1363,18 +1440,18 @@
     }
 
     .left-column {
-      position: relative;
-      top: auto;
+      position: sticky;
+      top: 118px;
       left: auto;
       right: auto;
-      z-index: 20;
+      z-index: 60;
+      width: 100%;
       height: auto;
       min-height: 0;
       flex: 0 0 auto;
       display: block;
       margin: 0;
-      padding-top: 0;
-      padding-bottom: 26px;
+      padding: 0 0 24px;
       background: #ffffff;
       overflow: visible;
     }
@@ -1390,7 +1467,7 @@
       flex-direction: column;
       align-items: flex-start;
       gap: 7px;
-      margin: 0 0 24px;
+      margin: 0 0 22px;
       padding: 0;
       text-align: left;
       background: #ffffff;
@@ -1475,7 +1552,7 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       align-content: start;
       gap: 18px 12px;
-      padding: 0 0 calc(110px + env(safe-area-inset-bottom));
+      padding: 16px 0 calc(110px + env(safe-area-inset-bottom));
       scrollbar-width: none;
       scrollbar-color: transparent transparent;
       -ms-overflow-style: none;
@@ -1593,9 +1670,10 @@
 
   @media (max-width: 700px) {
     .announcement-hero {
-      height: 100svh;
-      min-height: 100svh;
-      padding: 108px 16px 54px;
+      height: calc(100svh - 108px);
+      min-height: calc(100svh - 108px);
+      margin-top: 108px;
+      padding: 24px 16px 54px;
       align-items: center;
       background-position: center;
     }
@@ -1615,7 +1693,7 @@
     }
 
     .hero-side-link-right {
-      right: 52px;
+      right: 16px;
     }
 
     .hero-center {
@@ -1676,8 +1754,9 @@
     }
 
     .left-column {
-      padding-top: 0;
-      padding-bottom: 24px;
+      position: sticky;
+      top: 108px;
+      padding: 0 0 22px;
     }
 
     .work-filter {
@@ -1691,7 +1770,7 @@
       flex-direction: column;
       align-items: flex-start;
       gap: 7px;
-      margin: 0 0 24px;
+      margin: 0 0 22px;
       padding: 0;
       text-align: left;
       background: #ffffff;
@@ -1740,7 +1819,7 @@
       overflow: visible;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 18px 10px;
-      padding: 0 0 calc(100px + env(safe-area-inset-bottom));
+      padding: 16px 0 calc(100px + env(safe-area-inset-bottom));
       overscroll-behavior: auto;
     }
 
@@ -1814,8 +1893,7 @@
     }
 
     .left-column {
-      padding-top: 0;
-      padding-bottom: 22px;
+      padding-bottom: 20px;
     }
 
     .project-preview h1 {
