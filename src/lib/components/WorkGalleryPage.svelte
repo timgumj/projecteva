@@ -53,6 +53,14 @@
     }
   });
 
+  $effect(() => {
+    normalizedItems.length;
+
+    if (browser) {
+      requestAnimationFrame(updateScrollHint);
+    }
+  });
+
   function isAllItems() {
     return selectedItemSlug === allLabel || !selectedItemSlug;
   }
@@ -431,10 +439,17 @@
       <aside class="left-column" aria-label={`${itemLabel} navigation`}>
         <div
           class="painting-filter"
+          class:has-scroll-hint={showScrollHint}
           aria-label={`${itemLabel} categories`}
           bind:this={filterElement}
           onscroll={handleFilterScroll}
         >
+          {#if showScrollHint}
+            <span class="painting-scroll-hint" aria-hidden="true">
+              <span class="scroll-hint-text">SCROLL</span>
+              <span class="scroll-hint-icon">↓</span>
+            </span>
+          {/if}
           <button
             type="button"
             class="all-paintings-button"
@@ -462,12 +477,6 @@
               </span>
             </button>
           {/each}
-
-          {#if showScrollHint}
-            <span class="painting-scroll-hint" aria-hidden="true">
-              SCROLL ↓
-            </span>
-          {/if}
         </div>
 
         <div class="painting-preview">
@@ -479,8 +488,6 @@
                 <strong>{itemLabelPlural}</strong>
                 <p>{computedAllIntroText}</p>
               {:else if selectedItemInfo}
-                <strong>GALLERY</strong>
-
                 <div class="painting-description" class:expanded={infoExpanded}>
                   <p>{@html cleanHtml(selectedItemInfo)}</p>
                 </div>
@@ -495,7 +502,6 @@
                   </button>
                 {/if}
               {:else}
-                <strong>GALLERY</strong>
                 <p>{computedFallbackGalleryText}</p>
               {/if}
             </div>
@@ -814,6 +820,17 @@
     100% {
       transform: translateY(0);
       opacity: 1;
+    }
+  }
+
+  @keyframes scrollHintArrow {
+    0%,
+    100% {
+      transform: translateY(-1px);
+    }
+
+    50% {
+      transform: translateY(2px);
     }
   }
 
@@ -1432,47 +1449,96 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      align-items: flex-end;
+      align-items: flex-start;
       gap: 7px;
       margin: 0;
-      padding: 0;
-      text-align: right;
+      padding: 0 0 16px;
+      text-align: left;
       background: #ffffff;
     }
 
-    .painting-scroll-hint {
+    .painting-filter.has-scroll-hint {
+      padding-left: 32px;
+    }
+
+    .painting-filter.has-scroll-hint::after {
+      content: "";
       position: sticky;
       bottom: 0;
-      align-self: flex-end;
-      display: inline-flex;
-      justify-content: flex-end;
+      z-index: 3;
       width: 100%;
-      padding: 7px 0 0;
+      height: 20px;
+      flex: 0 0 20px;
+      margin-top: -20px;
       background: linear-gradient(
         to bottom,
         rgba(255, 255, 255, 0),
-        #ffffff 45%,
+        #ffffff 72%,
         #ffffff 100%
       );
+      pointer-events: none;
+    }
+
+    .painting-scroll-hint {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 5;
+      width: 22px;
+      height: 100%;
+      min-height: 92px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 6px;
+      padding-top: 1px;
       color: var(--painting-color);
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 900;
       line-height: 1;
       letter-spacing: 0.08em;
-      text-align: right;
       pointer-events: none;
+    }
+
+    .painting-scroll-hint::after {
+      content: "";
+      width: 1px;
+      height: 28px;
+      margin-top: 2px;
+      background: currentColor;
+      opacity: 0.32;
+    }
+
+    .scroll-hint-text {
+      display: block;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      transform: rotate(180deg);
+      white-space: nowrap;
+    }
+
+    .scroll-hint-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 12px;
+      height: 12px;
+      font-size: 12px;
+      line-height: 1;
+      animation: scrollHintArrow 1.15s ease-in-out infinite;
     }
 
     .all-paintings-button,
     .selected-painting-button {
       display: inline-flex;
-      justify-content: flex-end;
+      justify-content: flex-start;
       align-items: center;
       width: 100%;
       max-width: 100%;
       margin: 0;
       padding: 0;
-      text-align: right;
+      text-align: left;
       font-size: 12px;
       line-height: 1.08;
       white-space: nowrap;
@@ -1480,13 +1546,12 @@
 
     .painting-button-label {
       max-width: calc(100% - 24px);
-      text-align: right;
+      text-align: left;
     }
 
     .painting-button-label span {
       white-space: nowrap;
     }
-
     .painting-preview {
       width: 100%;
       max-width: none;
@@ -1572,7 +1637,7 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       align-content: start;
       gap: 18px 12px;
-      padding: 0 0 calc(150px + env(safe-area-inset-bottom));
+      padding: 0 0 calc(88px + env(safe-area-inset-bottom));
     }
 
     .image-grid.single-image-grid {
@@ -1718,8 +1783,8 @@
 
     .back-to-top {
       display: block;
-      margin: 44px 0 0;
-      padding-bottom: calc(64px + env(safe-area-inset-bottom));
+      margin: 34px 0 0;
+      padding-bottom: calc(24px + env(safe-area-inset-bottom));
       font-size: 14px;
     }
   }
@@ -1804,7 +1869,7 @@
     .image-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 18px 10px;
-      padding: 0 0 calc(145px + env(safe-area-inset-bottom));
+      padding: 0 0 calc(76px + env(safe-area-inset-bottom));
     }
 
     .image-grid.single-image-grid {
@@ -1925,8 +1990,8 @@
 
     .back-to-top {
       display: block;
-      margin-top: 38px;
-      padding-bottom: calc(64px + env(safe-area-inset-bottom));
+      margin-top: 28px;
+      padding-bottom: calc(22px + env(safe-area-inset-bottom));
       font-size: 12px;
     }
 
