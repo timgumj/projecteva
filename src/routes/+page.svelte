@@ -17,6 +17,13 @@
   const welcomeDescription =
     '"when going down the rabbit hole prepare to chill with lions" - EVA.';
 
+  const selectedWorkLimitPerCategory = 6;
+  const selectedWorkCategoryOrder = [
+    "PAINTINGS",
+    "EXHIBITIONS",
+    "PERFORMANCES",
+  ];
+
   let allWorks = $derived(data.works || []);
 
   function cleanHtml(value) {
@@ -131,6 +138,47 @@
     return ["HOME PAGE"];
   }
 
+  function getNormalizedCategoryKey(value = "") {
+    const slug = slugify(value);
+
+    if (slug === "painting" || slug === "paintings") return "paintings";
+    if (slug === "exhibition" || slug === "exhibitions") return "exhibitions";
+    if (slug === "performance" || slug === "performances")
+      return "performances";
+
+    return slug;
+  }
+
+  function workBelongsToSelectedCategory(work, selectedCategory) {
+    const selectedKey = getNormalizedCategoryKey(selectedCategory);
+
+    return getWorkCategoryNames(work).some(
+      (categoryName) => getNormalizedCategoryKey(categoryName) === selectedKey,
+    );
+  }
+
+  function getSelectedWorksForDefaultView() {
+    const selectedWorks = [];
+    const usedWorkKeys = new Set();
+
+    selectedWorkCategoryOrder.forEach((categoryName) => {
+      const categoryWorks = allWorks
+        .filter((work) => workBelongsToSelectedCategory(work, categoryName))
+        .slice(0, selectedWorkLimitPerCategory);
+
+      categoryWorks.forEach((work) => {
+        const workKey = work?.id || work?.slug || work?.title;
+
+        if (!usedWorkKeys.has(workKey)) {
+          usedWorkKeys.add(workKey);
+          selectedWorks.push(work);
+        }
+      });
+    });
+
+    return selectedWorks;
+  }
+
   function getPreviewCategory(work) {
     if (activeCategory !== "ALL WORK") {
       return activeCategory;
@@ -207,12 +255,12 @@
 
   let filteredWorks = $derived.by(() => {
     if (activeCategory === "ALL WORK") {
-      return allWorks;
+      return getSelectedWorksForDefaultView();
     }
 
-    return allWorks.filter((work) =>
-      getWorkCategoryNames(work).includes(activeCategory),
-    );
+    return allWorks
+      .filter((work) => workBelongsToSelectedCategory(work, activeCategory))
+      .slice(0, selectedWorkLimitPerCategory);
   });
 
   let activeWork = $derived.by(
@@ -497,7 +545,9 @@
                   {String(index).padStart(2, "0")}
                 </span>
               {/if}<span class="filter-label">
-                <span>{category}</span>
+                <span
+                  >{category === "ALL WORK" ? "SELECTED WORKS" : category}</span
+                >
               </span>
             </button>
           {/each}

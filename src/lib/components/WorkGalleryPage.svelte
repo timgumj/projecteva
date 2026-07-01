@@ -1740,47 +1740,24 @@
     }
 
     .painting-filter {
-      position: fixed;
-      top: 108px;
-      left: 16px;
-      right: 16px;
-      z-index: 40;
-      width: calc(100% - 32px);
-      max-height: 100px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 7px;
-      margin: 0;
-      padding: 0;
-      text-align: right;
-      background: #ffffff;
+      align-items: flex-start;
+      text-align: left;
     }
 
     .painting-scroll-hint {
-      font-size: 9px;
-      padding-top: 6px;
+      align-self: flex-start;
+      justify-content: flex-start;
+      text-align: left;
     }
 
     .all-paintings-button,
     .selected-painting-button {
-      display: inline-flex;
-      justify-content: flex-end;
-      align-items: center;
-      width: 100%;
-      max-width: 100%;
-      margin: 0;
-      padding: 0;
-      text-align: right;
-      font-size: 12px;
-      line-height: 1.08;
-      white-space: nowrap;
+      justify-content: flex-start;
+      text-align: left;
     }
 
     .painting-button-label {
-      max-width: calc(100% - 24px);
-      text-align: right;
+      text-align: left;
     }
 
     .painting-button-label span {
