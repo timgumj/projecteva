@@ -24,6 +24,7 @@
   let gridElement = $state(null);
   let filterElement = $state(null);
   let showScrollHint = $state(false);
+  let filterScrolledDown = $state(false);
   let infoExpanded = $state(false);
 
   let normalizedItems = $derived.by(() => {
@@ -264,11 +265,8 @@
     const hasOverflow =
       filterElement.scrollHeight > filterElement.clientHeight + 6;
 
-    const isNotAtBottom =
-      filterElement.scrollTop + filterElement.clientHeight <
-      filterElement.scrollHeight - 6;
-
-    showScrollHint = hasOverflow && isNotAtBottom;
+    showScrollHint = hasOverflow;
+    filterScrolledDown = hasOverflow && filterElement.scrollTop > 6;
   }
 
   function handleFilterScroll() {
@@ -438,45 +436,58 @@
     <section class="paintings-layout" aria-label={itemLabelPlural}>
       <aside class="left-column" aria-label={`${itemLabel} navigation`}>
         <div
-          class="painting-filter"
+          class="painting-filter-shell"
           class:has-scroll-hint={showScrollHint}
-          aria-label={`${itemLabel} categories`}
-          bind:this={filterElement}
-          onscroll={handleFilterScroll}
         >
           {#if showScrollHint}
             <span class="painting-scroll-hint" aria-hidden="true">
+              <span
+                class="scroll-hint-icon scroll-hint-icon-up"
+                class:visible={filterScrolledDown}
+              >
+                ↑
+              </span>
+
               <span class="scroll-hint-text">SCROLL</span>
-              <span class="scroll-hint-icon">↓</span>
+
+              <span class="scroll-hint-icon scroll-hint-icon-down"> ↓ </span>
             </span>
           {/if}
-          <button
-            type="button"
-            class="all-paintings-button"
-            class:active={isAllItems()}
-            onclick={selectAllItems}
-          >
-            <span class="painting-button-label">
-              <span>{allLabel}</span>
-            </span>
-          </button>
 
-          {#each normalizedItems as item, index}
+          <div
+            class="painting-filter"
+            aria-label={`${itemLabel} categories`}
+            bind:this={filterElement}
+            onscroll={handleFilterScroll}
+          >
             <button
               type="button"
-              class="selected-painting-button"
-              class:active={selectedItem?.postSlug === item.postSlug}
-              onclick={() => selectItem(item)}
+              class="all-paintings-button"
+              class:active={isAllItems()}
+              onclick={selectAllItems}
             >
-              <span class="painting-list-number">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-
               <span class="painting-button-label">
-                <span>{item.title}</span>
+                <span>{allLabel}</span>
               </span>
             </button>
-          {/each}
+
+            {#each normalizedItems as item, index}
+              <button
+                type="button"
+                class="selected-painting-button"
+                class:active={selectedItem?.postSlug === item.postSlug}
+                onclick={() => selectItem(item)}
+              >
+                <span class="painting-list-number">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+
+                <span class="painting-button-label">
+                  <span>{item.title}</span>
+                </span>
+              </button>
+            {/each}
+          </div>
         </div>
 
         <div class="painting-preview">
@@ -705,6 +716,12 @@
     justify-content: space-between;
   }
 
+  .painting-filter-shell {
+    position: relative;
+    width: 100%;
+    max-height: 44vh;
+  }
+
   .painting-filter {
     width: 100%;
     max-height: 44vh;
@@ -823,7 +840,7 @@
     }
   }
 
-  @keyframes scrollHintArrow {
+  @keyframes scrollHintArrowDown {
     0%,
     100% {
       transform: translateY(-1px);
@@ -831,6 +848,17 @@
 
     50% {
       transform: translateY(2px);
+    }
+  }
+
+  @keyframes scrollHintArrowUp {
+    0%,
+    100% {
+      transform: translateY(1px);
+    }
+
+    50% {
+      transform: translateY(-2px);
     }
   }
 
@@ -1438,79 +1466,70 @@
       background: #ffffff;
     }
 
-    .painting-filter {
+    .painting-filter-shell {
       position: fixed;
       top: 108px;
       left: 16px;
       right: 16px;
       z-index: 40;
       width: calc(100% - 32px);
+      height: 106px;
+      max-height: 106px;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+    }
+
+    .painting-filter-shell.has-scroll-hint {
+      padding-left: 32px;
+    }
+
+    .painting-filter {
+      position: relative;
+      width: 100%;
+      height: 100%;
       max-height: 106px;
       overflow-y: auto;
+      overflow-x: hidden;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
       gap: 7px;
       margin: 0;
-      padding: 0 0 16px;
+      padding: 0;
       text-align: left;
       background: #ffffff;
-    }
-
-    .painting-filter.has-scroll-hint {
-      padding-left: 32px;
-    }
-
-    .painting-filter.has-scroll-hint::after {
-      content: "";
-      position: sticky;
-      bottom: 0;
-      z-index: 3;
-      width: 100%;
-      height: 20px;
-      flex: 0 0 20px;
-      margin-top: -20px;
-      background: linear-gradient(
-        to bottom,
-        rgba(255, 255, 255, 0),
-        #ffffff 72%,
-        #ffffff 100%
-      );
-      pointer-events: none;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
     }
 
     .painting-scroll-hint {
       position: absolute;
       top: 0;
+      bottom: 0;
       left: 0;
-      z-index: 5;
+      z-index: 6;
       width: 22px;
-      height: 100%;
-      min-height: 92px;
-      display: flex;
-      flex-direction: column;
+      height: 106px;
+      display: grid;
+      grid-template-rows: 16px 1fr 16px;
       align-items: center;
-      justify-content: flex-start;
-      gap: 6px;
-      padding-top: 1px;
+      justify-items: center;
+      padding: 0 0 1px;
       color: var(--painting-color);
       font-size: 9px;
       font-weight: 900;
       line-height: 1;
       letter-spacing: 0.08em;
       pointer-events: none;
-    }
-
-    .painting-scroll-hint::after {
-      content: "";
-      width: 1px;
-      height: 28px;
-      margin-top: 2px;
-      background: currentColor;
-      opacity: 0.32;
+      background: #ffffff;
     }
 
     .scroll-hint-text {
+      grid-row: 2;
       display: block;
       writing-mode: vertical-rl;
       text-orientation: mixed;
@@ -1519,14 +1538,29 @@
     }
 
     .scroll-hint-icon {
+      width: 14px;
+      height: 14px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 12px;
-      height: 12px;
-      font-size: 12px;
+      font-size: 13px;
       line-height: 1;
-      animation: scrollHintArrow 1.15s ease-in-out infinite;
+    }
+
+    .scroll-hint-icon-up {
+      grid-row: 1;
+      opacity: 0;
+      animation: scrollHintArrowUp 1.15s ease-in-out infinite;
+      transition: opacity 0.22s ease;
+    }
+
+    .scroll-hint-icon-up.visible {
+      opacity: 1;
+    }
+
+    .scroll-hint-icon-down {
+      grid-row: 3;
+      animation: scrollHintArrowDown 1.15s ease-in-out infinite;
     }
 
     .all-paintings-button,
@@ -1552,6 +1586,7 @@
     .painting-button-label span {
       white-space: nowrap;
     }
+
     .painting-preview {
       width: 100%;
       max-width: none;
@@ -1804,14 +1839,15 @@
       padding-bottom: 28px;
     }
 
-    .painting-filter {
-      align-items: flex-start;
-      text-align: left;
+    .painting-filter-shell {
+      top: 100px;
+      left: 16px;
+      right: 16px;
+      width: calc(100% - 32px);
     }
 
-    .painting-scroll-hint {
-      align-self: flex-start;
-      justify-content: flex-start;
+    .painting-filter {
+      align-items: flex-start;
       text-align: left;
     }
 
