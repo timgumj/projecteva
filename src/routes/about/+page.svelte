@@ -179,9 +179,6 @@
 </main>
 
 <style>
-  /* DESKTOP ABOUT PAGE — PREMIUM MINIMAL VERSION */
-  /* Same row position as homepage, wider left column, tighter column gap */
-
   :global(:root) {
     --site-font-family: Arial, Helvetica, sans-serif;
   }
@@ -217,35 +214,13 @@
     text-transform: none;
   }
 
-  .about-video-frame {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background: #eeeeee;
-  }
-
-  .about-video-frame video,
-  .about-video-thumbnail {
-    width: 100%;
-    height: 100%;
-    display: block;
-    object-fit: cover;
-  }
-
-  .about-video-thumbnail {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-  }
-
   .about-layout {
     width: 100%;
     height: calc(100vh - 186px);
     min-height: 0;
     display: grid;
     grid-template-columns: minmax(310px, 36vw) minmax(0, 1fr);
-    gap: clamp(18px, 2vw, 38px);
+    gap: clamp(20px, 2.2vw, 42px);
     align-items: stretch;
     overflow: hidden;
   }
@@ -257,7 +232,7 @@
     min-height: 0;
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
-    gap: clamp(48px, 7vh, 82px);
+    gap: clamp(52px, 7vh, 86px);
     padding-right: 0;
     overflow: hidden;
   }
@@ -268,7 +243,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: 7px;
     padding: 0;
     margin: 0;
   }
@@ -276,19 +251,19 @@
   .about-link {
     position: relative;
     display: inline-flex;
-    align-items: baseline;
-    gap: 7px;
-    width: fit-content;
+    align-items: center;
+    gap: 4px;
+    width: auto;
     max-width: 100%;
     margin: 0;
     padding: 0;
     border: 0;
     background: transparent;
-    color: #b7b7b7;
-    font-size: clamp(11px, 0.7vw, 13px);
-    font-weight: 700;
-    line-height: 1.05;
-    letter-spacing: 0.02em;
+    color: #b8b8b8;
+    font-size: clamp(12px, 0.78vw, 13px);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 0.01em;
     text-align: left;
     text-transform: uppercase;
     cursor: pointer;
@@ -304,19 +279,21 @@
   }
 
   .about-link.active .about-link-label span,
-  .about-link:hover .about-link-label span {
+  .about-link:hover .about-link-label span,
+  .about-link:focus .about-link-label span {
     animation: aboutTextLift 0.42s ease both;
   }
 
   .about-link-number {
     display: inline-block;
-    min-width: 18px;
-    flex-shrink: 0;
+    flex: 0 0 auto;
+    min-width: 0;
+    margin-right: 0;
     color: inherit;
-    font-size: 0.78em;
+    font-size: 0.82em;
     font-weight: 700;
-    letter-spacing: 0.05em;
-    opacity: 0.58;
+    line-height: 1;
+    opacity: 0.62;
     transform: translateY(-0.5px);
   }
 
@@ -434,6 +411,7 @@
   }
 
   .about-video-frame {
+    position: relative;
     width: 100%;
     height: 100%;
     min-height: 0;
@@ -441,16 +419,24 @@
     background: #ffffff;
   }
 
-  .about-video-frame video {
+  .about-video-frame video,
+  .about-video-thumbnail {
     width: 100%;
     height: 100%;
     display: block;
     object-fit: cover;
     object-position: center;
+  }
+
+  .about-video-frame video {
     background: #ffffff;
   }
 
-  /* DESKTOP REFINEMENT FOR SMALLER LAPTOPS */
+  .about-video-thumbnail {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+  }
 
   @media (min-width: 1025px) and (max-width: 1280px) {
     .about-page {
@@ -460,11 +446,11 @@
     .about-layout {
       height: calc(100vh - 186px);
       grid-template-columns: minmax(290px, 38vw) minmax(0, 1fr);
-      gap: clamp(16px, 2vw, 32px);
+      gap: clamp(18px, 2vw, 34px);
     }
 
     .about-left {
-      gap: clamp(38px, 6vh, 68px);
+      gap: clamp(40px, 6vh, 70px);
     }
 
     .about-links {
@@ -484,8 +470,6 @@
     }
   }
 
-  /* DESKTOP REFINEMENT FOR LARGE SCREENS */
-
   @media (min-width: 1440px) {
     .about-page {
       padding: 96px 72px 90px 28px;
@@ -494,7 +478,7 @@
     .about-layout {
       height: calc(100vh - 186px);
       grid-template-columns: minmax(360px, 34vw) minmax(0, 1fr);
-      gap: clamp(24px, 2.4vw, 48px);
+      gap: clamp(26px, 2.4vw, 50px);
     }
 
     .about-text-block,
@@ -561,7 +545,7 @@
       flex-basis: 43dvh;
       display: block;
       overflow: hidden;
-      margin: 0 0 14px;
+      margin: 0 0 16px;
     }
 
     .about-video-frame {
@@ -622,27 +606,52 @@
     }
 
     .about-link {
-      display: flex;
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 4px;
       width: 100%;
+      max-width: 100%;
       min-width: 0;
       min-height: 0;
       margin: 0;
       padding: 0;
       color: #b8b8b8;
-      font-size: 14px;
-      font-weight: 700;
+      font-size: 12px;
+      font-weight: 900;
       line-height: 1.08;
+      letter-spacing: 0.01em;
       text-align: left;
-      white-space: normal;
+      white-space: nowrap;
       word-break: normal;
-      overflow-wrap: anywhere;
+      overflow-wrap: normal;
       transform: none;
-      letter-spacing: 0;
     }
 
     .about-link-number {
-      min-width: 22px;
+      display: inline-block;
+      flex: 0 0 auto;
+      min-width: 0;
+      margin-right: 0;
       font-size: 0.82em;
+      font-weight: 700;
+      line-height: 1;
+      opacity: 0.62;
+      transform: translateY(-0.5px);
+    }
+
+    .about-link-label {
+      max-width: calc(100% - 24px);
+      overflow: hidden;
+      text-align: left;
+    }
+
+    .about-link-label span {
+      display: inline-block;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .about-link.active,
@@ -650,7 +659,7 @@
     .about-link:focus {
       color: #000000;
       transform: none;
-      letter-spacing: 0;
+      letter-spacing: 0.01em;
     }
 
     .about-text-block {
@@ -681,7 +690,7 @@
       font-size: 16px;
       font-weight: 700;
       line-height: 1;
-      letter-spacing: 0;
+      letter-spacing: 0.005em;
       text-align: left;
     }
 
@@ -696,6 +705,7 @@
       font-size: 14px;
       font-weight: 500;
       line-height: 1.34;
+      letter-spacing: 0.006em;
     }
 
     :global(.about-section-text a) {
@@ -718,7 +728,7 @@
       height: 42dvh;
       flex: 0 0 42vh;
       flex-basis: 42dvh;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
 
     .about-links {
@@ -732,11 +742,12 @@
 
     .about-link {
       font-size: 12px;
+      font-weight: 900;
       line-height: 1.08;
+      letter-spacing: 0.01em;
     }
 
     .about-link-number {
-      min-width: 18px;
       font-size: 0.82em;
     }
 
@@ -768,7 +779,7 @@
       height: 40dvh;
       flex: 0 0 40vh;
       flex-basis: 40dvh;
-      margin-bottom: 11px;
+      margin-bottom: 13px;
     }
 
     .about-links {
@@ -782,10 +793,6 @@
     .about-link {
       font-size: 11px;
       line-height: 1.08;
-    }
-
-    .about-link-number {
-      min-width: 17px;
     }
 
     .about-text-block h1 {

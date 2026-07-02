@@ -16,6 +16,7 @@
   let performanceItems = $derived(data?.performanceMenuItems || []);
   let eventItems = $derived(data?.eventMenuItems || []);
   let pathname = $derived(page.url.pathname);
+  let isHomePage = $derived(pathname === "/");
 
   const desktopSubmenuLabels = ["paintings", "exhibitions", "performances"];
 
@@ -31,7 +32,7 @@
     { label: "Paintings", href: "/painting", children: paintingItems },
     { label: "Exhibitions", href: "/exhibitions", children: exhibitionItems },
     {
-      label: "Performances",
+      label: "Public viewings",
       href: "/performances",
       children: performanceItems,
     },
@@ -133,16 +134,18 @@
   }
 
   function getSubmenuAccentColor(item) {
-    const label = getItemLabel(item).toLowerCase();
+    const colors = {
+      "/painting": "#ff5c01",
+      "/exhibitions": "#24d480",
+      "/performances": "#ab9bf2",
+    };
 
-    return submenuAccentColors[label] || "#ffffff";
+    return colors[item.href] || "#ffffff";
   }
 
   function hasDesktopSubmenu(item) {
-    const label = getItemLabel(item).toLowerCase();
-
     return (
-      desktopSubmenuLabels.includes(label) &&
+      ["/painting", "/exhibitions", "/performances"].includes(item.href) &&
       item.children &&
       item.children.length > 0
     );
@@ -451,11 +454,15 @@
 
 <footer
   class="site-footer"
-  class:is-visible={headerScrolled}
+  class:is-visible={!isHomePage || headerScrolled}
   aria-label="Footer navigation"
 >
   <a href="/contact" class="footer-link footer-link-left" onclick={closeMenu}>
     CONTACT
+  </a>
+
+  <a href="/privacy" class="footer-link footer-link-center" onclick={closeMenu}>
+    PRIVACY
   </a>
 
   <a href="/archive" class="footer-link footer-link-right" onclick={closeMenu}>
@@ -791,7 +798,7 @@
     align-items: center;
     gap: 14px;
     color: #ffffff;
-    font-size: clamp(36px, 3.45vw, 64px);
+    font-size: clamp(36px, 2.45vw, 54px);
     font-weight: 400;
     line-height: 0.96;
     letter-spacing: -0.022em;
@@ -1023,7 +1030,7 @@
     width: 100%;
     min-height: 72px;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     align-items: center;
     padding: 0 28px;
     background: transparent;
@@ -1387,7 +1394,7 @@
     .site-footer {
       min-height: 58px;
       padding: 0 24px;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       background: transparent;
     }
 
@@ -1498,7 +1505,7 @@
     .site-footer {
       min-height: 58px;
       padding: 0 24px;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       background: transparent;
     }
 
