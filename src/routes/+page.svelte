@@ -1420,13 +1420,18 @@
   }
 
   @media (max-width: 1024px) {
-    .announcement-hero {
-      height: 100svh;
-      min-height: 100svh;
-      margin-top: 0;
-      margin-bottom: 0;
-      padding: 94px 24px 82px;
-      background-position: center;
+    @media (max-width: 1024px) {
+      .announcement-hero {
+        padding: 94px 24px 128px;
+      }
+
+      .hero-bottom-type {
+        bottom: 118px;
+      }
+
+      .hero-scroll-indicator {
+        bottom: 64px;
+      }
     }
 
     .hero-side-link {
@@ -1444,6 +1449,7 @@
 
     .hero-center {
       width: min(460px, 68vw);
+      transform: translateY(-38px);
     }
 
     .hero-center h1 {
@@ -1458,7 +1464,7 @@
     .hero-bottom-type {
       left: 24px;
       right: 24px;
-      bottom: 82px;
+      bottom: 138px;
       font-size: clamp(23px, 4.5vw, 46px);
     }
 
@@ -1720,14 +1726,18 @@
   }
 
   @media (max-width: 700px) {
-    .announcement-hero {
-      height: 100svh;
-      min-height: 100svh;
-      margin-top: 0;
-      margin-bottom: 0;
-      padding: 90px 20px 76px;
-      align-items: center;
-      background-position: center;
+    @media (max-width: 700px) {
+      .announcement-hero {
+        padding: 90px 20px 124px;
+      }
+
+      .hero-bottom-type {
+        bottom: 112px;
+      }
+
+      .hero-scroll-indicator {
+        bottom: 60px;
+      }
     }
 
     .announcement-hero::before {
@@ -1750,6 +1760,7 @@
 
     .hero-center {
       width: min(320px, 66vw);
+      transform: translateY(-34px);
     }
 
     .hero-kicker {
@@ -1776,9 +1787,7 @@
     .hero-bottom-type {
       left: 20px;
       right: 20px;
-      bottom: 74px;
-      font-size: clamp(19px, 7vw, 34px);
-      letter-spacing: -0.07em;
+      bottom: 132px;
     }
 
     .hero-bottom-item {
@@ -1934,6 +1943,28 @@
   @media (max-width: 420px) {
     .hero-center {
       width: min(280px, 64vw);
+    }
+
+    @media (max-width: 420px) {
+      .announcement-hero {
+        padding-bottom: 128px;
+      }
+
+      .hero-bottom-type {
+        bottom: 114px;
+      }
+
+      .hero-scroll-indicator {
+        bottom: 58px;
+      }
+    }
+
+    .hero-center {
+      transform: translateY(-28px);
+    }
+
+    .hero-bottom-type {
+      bottom: 128px;
     }
 
     .hero-bottom-type {

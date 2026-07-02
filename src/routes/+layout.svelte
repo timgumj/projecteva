@@ -104,9 +104,9 @@
   }
 
   function getSubmenuHref(parentItem, child) {
-    const parentLabel = getItemLabel(parentItem).toLowerCase();
+    const parentHref = parentItem?.href;
 
-    if (parentLabel === "paintings") {
+    if (parentHref === "/painting") {
       const postId = getPostId(child);
 
       if (postId) {
@@ -116,7 +116,7 @@
       return child?.href || "/painting";
     }
 
-    if (parentLabel === "performances") {
+    if (parentHref === "/performances") {
       const postId = getPostId(child);
 
       if (postId) {
@@ -126,7 +126,7 @@
       return child?.href || "/performances";
     }
 
-    if (parentLabel === "exhibitions") {
+    if (parentHref === "/exhibitions") {
       return "/exhibitions";
     }
 
@@ -169,8 +169,10 @@
     if (!browser) return;
 
     if (shouldLock) {
+      document.documentElement.classList.add("menu-open-lock");
       document.body.classList.add("menu-open-lock");
     } else {
+      document.documentElement.classList.remove("menu-open-lock");
       document.body.classList.remove("menu-open-lock");
     }
   }
@@ -217,6 +219,7 @@
     openMobileSubmenus = {};
 
     if (browser) {
+      document.documentElement.classList.remove("menu-open-lock");
       document.body.classList.remove("menu-open-lock");
       updateHeaderScrolled();
     }
@@ -481,15 +484,20 @@
     padding: 0;
     width: 100%;
     min-height: 100%;
+    height: auto;
     overflow-x: hidden;
+    overflow-y: auto;
   }
 
   :global(body) {
     overflow-x: hidden;
+    overflow-y: auto;
   }
 
+  :global(html.menu-open-lock),
   :global(body.menu-open-lock) {
     overflow: hidden !important;
+    touch-action: none;
   }
 
   .site-header,
@@ -1030,7 +1038,7 @@
     width: 100%;
     min-height: 72px;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
     align-items: center;
     padding: 0 28px;
     background: transparent;
@@ -1043,15 +1051,21 @@
   }
 
   .footer-link {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
     color: #2f2d2b;
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 4px;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 700;
     line-height: 1;
-    letter-spacing: -0.04em;
+    letter-spacing: -0.02em;
     text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
     transition: opacity 0.25s ease;
   }
 
@@ -1063,6 +1077,11 @@
   .footer-link-left {
     justify-self: start;
     text-align: left;
+  }
+
+  .footer-link-center {
+    justify-self: center;
+    text-align: center;
   }
 
   .footer-link-right {
@@ -1394,7 +1413,7 @@
     .site-footer {
       min-height: 58px;
       padding: 0 24px;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
       background: transparent;
     }
 
@@ -1404,8 +1423,11 @@
 
     .footer-link {
       font-size: 10px;
-      font-weight: 400;
-      letter-spacing: 0.01em;
+      font-weight: 600;
+      letter-spacing: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
       text-decoration-thickness: 1px;
       text-underline-offset: 4px;
     }
@@ -1413,6 +1435,11 @@
     .footer-link-left {
       justify-self: start;
       text-align: left;
+    }
+
+    .footer-link-center {
+      justify-self: center;
+      text-align: center;
     }
 
     .footer-link-right {
@@ -1504,8 +1531,8 @@
 
     .site-footer {
       min-height: 58px;
-      padding: 0 24px;
-      grid-template-columns: 1fr 1fr 1fr;
+      padding: 0 20px;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
       background: transparent;
     }
 
@@ -1514,7 +1541,12 @@
     }
 
     .footer-link {
-      font-size: 11px;
+      font-size: clamp(8px, 2.35vw, 10px);
+      font-weight: 600;
+      letter-spacing: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
     }
   }
 
@@ -1570,7 +1602,7 @@
 
     .site-footer {
       min-height: 58px;
-      padding: 0 10px;
+      padding: 0 20px;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
       background: transparent;
     }
@@ -1581,6 +1613,8 @@
 
     .footer-link {
       font-size: clamp(8px, 2.35vw, 10px);
+      font-weight: 600;
+      letter-spacing: 0;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: clip;
